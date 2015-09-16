@@ -2,4 +2,4 @@
 
 ## Under development
 
-![Sample App screenshot preview](screenshot.png)
+![Sample App screenshot preview](Android-Sample-App.png)
