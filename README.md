@@ -39,7 +39,7 @@ If you don't have a key store you must create a new one selecting "Create new...
 
 ![Sample App screenshot preview](signstudio2.png)
 
-The choose apk folder and "Build Type"
+Choose apk folder and "Build Type".
 
 ![Sample App screenshot preview](signstudio3.png)
 
