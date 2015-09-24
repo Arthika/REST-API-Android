@@ -7,21 +7,22 @@ You will need Android Studio at least 1.3.2 version, you can download these from
 
 ## Instructions:
 
-1) Pull repository contents.
+### 1) Pull repository contents.
 
-2) Open project, choose option:
+### 2) Open the project in Android Studio
+You have two options:
 
 2.a) Open the project into Android Studio (File -> Open -> Select ArthikaHFT folder)
 
 2.b) Select "Open an existing Android Studio Project" in Android Studio launcher menu, then select ArthikaHFT folder.
 
-### Run in Android Studio Emulator
+### 3) Run in Android Studio Emulator
 
 Select Run -> Run 'app'.
 
 If there is an emulator running you can choose one of them or launch new emulator selecting "Android virtual device".
 
-### Installing in Android Device
+### 4) Install in Android Device
 
 For installing the app in your mobile device you must generate apk file.
 
