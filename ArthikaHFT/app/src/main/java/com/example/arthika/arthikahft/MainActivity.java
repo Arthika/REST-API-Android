@@ -1,6 +1,7 @@
 package com.example.arthika.arthikahft;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -32,108 +33,6 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
-class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
-
-    @Override
-    public void timestampEvent(String timestamp) {
-        //System.out.println("Response timestamp: " + timestamp + " Contents:");
-        MainActivity.updateTime =  timestamp;
-    }
-
-    @Override
-    public void heartbeatEvent() {
-        System.out.println("Heartbeat!");
-    }
-
-    @Override
-    public void messageEvent(String message) {
-        System.out.println("Message from server: " + message);
-    }
-
-    @Override
-    public void priceEvent(List<ArthikaHFT.priceTick> priceTickList) {
-        for (ArthikaHFT.priceTick tick : priceTickList){
-            //System.out.println("Security: " + tick.security + " Price: " + tick.price + " Side: " + tick.side + " Liquidity: " + tick.liquidity);
-            for (int i=0; i<MainActivity.secs.size(); i++){
-                if (tick.security.equals(MainActivity.secs.get(i))){
-                    if (tick.side.equals("ask")){
-                        MainActivity.prices[(i+1)*3+1]=String.valueOf(tick.price);
-                    }
-                    else{
-                        MainActivity.prices[(i+1)*3+2]=String.valueOf(tick.price);
-                    }
-                }
-            }
-        }
-    }
-
-    @Override
-    public void assetPositionEvent(List<ArthikaHFT.assetPositionTick> assetPositionTickList) {
-        for (ArthikaHFT.assetPositionTick tick : assetPositionTickList){
-            System.out.println("Asset: " + tick.asset + " Account: " + tick.account + " Equity: " + tick.equity + " Exposure: " + tick.exposure);
-        }
-    }
-
-    @Override
-    public void securityPositionEvent(List<ArthikaHFT.securityPositionTick> securityPositionTickList) {
-        for (ArthikaHFT.securityPositionTick tick : securityPositionTickList){
-            System.out.println("Security: " + tick.security + " Account: " + tick.account + " Equity: " + tick.equity + " Exposure: " + tick.exposure + " Price: " + tick.price + " Pips: " + tick.pips);
-        }
-    }
-
-    @Override
-    public void positionHeartbeatEvent(ArthikaHFT.positionHeartbeat positionHeartbeatList) {
-        System.out.print("Asset: " );
-        for (int i=0; i<positionHeartbeatList.asset.size(); i++){
-            System.out.print(positionHeartbeatList.asset.get(i));
-            if (i<positionHeartbeatList.asset.size()-1){
-                System.out.print(",");
-            }
-        }
-        System.out.print(" Security: " );
-        for (int i=0; i<positionHeartbeatList.security.size(); i++){
-            System.out.print(positionHeartbeatList.security.get(i));
-            if (i<positionHeartbeatList.security.size()-1){
-                System.out.print(", ");
-            }
-        }
-        System.out.print(" Account: " );
-        for (int i=0; i<positionHeartbeatList.account.size(); i++){
-            System.out.print(positionHeartbeatList.account.get(i));
-            if (i<positionHeartbeatList.account.size()-1){
-                System.out.print(",");
-            }
-        }
-        System.out.println();
-    }
-
-    @Override
-    public void orderEvent(List<ArthikaHFT.orderTick> orderTickList) {
-        for (ArthikaHFT.orderTick tick : orderTickList){
-            System.out.println("TempId: " + tick.tempid + " OrderId: " + tick.orderid + " Security: " + tick.security + " Account: " + tick.account + " Quantity: " + tick.quantity + " Type: " + tick.type + " Side: " + tick.side + " Status: " + tick.status);
-        }
-    }
-
-    @Override
-    public void orderHeartbeatEvent(ArthikaHFT.orderHeartbeat orderHeartbeat) {
-        System.out.print("Security: " );
-        for (int i=0; i<orderHeartbeat.security.size(); i++){
-            System.out.print(orderHeartbeat.security.get(i));
-            if (i<orderHeartbeat.security.size()-1){
-                System.out.print(", ");
-            }
-        }
-        System.out.print(" Interface: " );
-        for (int i=0; i<orderHeartbeat.tinterface.size(); i++){
-            System.out.print(orderHeartbeat.tinterface.get(i));
-            if (i<orderHeartbeat.tinterface.size()-1){
-                System.out.print(",");
-            }
-        }
-        System.out.println();
-    }
-}
-
 public class MainActivity extends AppCompatActivity {
 
     /**
@@ -161,6 +60,11 @@ public class MainActivity extends AppCompatActivity {
     static Timer timer;
     static MyTimerTask myTimerTask;
     static List<ArthikaHFT.orderTick> orderList;
+    static List<String> orderArray;
+
+    private static final int PRICE_COLUMNS = 3;
+    private static final int ORDER_COLUMNS = 5;
+    private static final int REFRESH_TIME = 500;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -181,14 +85,14 @@ public class MainActivity extends AppCompatActivity {
         updateTime = "";
 
         secs = Arrays.asList("EUR_USD", "EUR_GBP", "EUR_JPY", "GBP_JPY", "GBP_USD", "USD_JPY", "AUD_USD", "USD_CAD");
-        prices = new String[3 * (secs.size() + 1)];
+        prices = new String[PRICE_COLUMNS * (secs.size() + 1)];
         prices[0] = "SECURITY";
         prices[1] = "ASK";
         prices[2] = "BID";
         for (int i = 0; i < secs.size(); i++) {
-            prices[(i + 1) * 3] = secs.get(i);
-            prices[(i + 1) * 3 + 1] = "0";
-            prices[(i + 1) * 3 + 2] = "0";
+            prices[(i + 1) * PRICE_COLUMNS] = secs.get(i);
+            prices[(i + 1) * PRICE_COLUMNS + 1] = "0";
+            prices[(i + 1) * PRICE_COLUMNS + 2] = "0";
         }
 
         amountlist = new Integer[]{1000, 2000, 5000, 10000};
@@ -212,9 +116,10 @@ public class MainActivity extends AppCompatActivity {
                 });
 
         alertOrder = alertBuilder.create();
-        //alertOrder.show();
 
         myTimerTask = new MyTimerTask();
+
+        getOrder();
 
     }
 
@@ -263,11 +168,11 @@ public class MainActivity extends AppCompatActivity {
         ArthikaHFT.orderRequest order = new ArthikaHFT.orderRequest();
         order.tinterface = PricesFragment.TISpinner.getSelectedItem().toString();
         order.quantity = (int) PricesFragment.amountSpinner.getSelectedItem();
-        if ((PricesFragment.cellSelected % 3)==1) {
+        if ((PricesFragment.cellSelected % PRICE_COLUMNS)==1) {
             order.security = prices[(PricesFragment.cellSelected-1)];
             order.side = "buy";
         }
-        if ((PricesFragment.cellSelected % 3)==2) {
+        if ((PricesFragment.cellSelected % PRICE_COLUMNS)==2) {
             order.security = prices[(PricesFragment.cellSelected-2)];
             order.side = "sell";
         }
@@ -282,35 +187,40 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private List<ArthikaHFT.orderTick> getOrder() {
+    private void getOrder() {
         getOrderConnection conn = new getOrderConnection();
         conn.execute();
-        List<ArthikaHFT.orderTick> orderList = conn.orderList;
-        return orderList;
     }
 
     private class getOrderConnection extends AsyncTask {
 
-        private List<ArthikaHFT.orderTick> orderList;
-
         @Override
         protected Object doInBackground(Object... arg0) {
-            orderList = getOrderConnect();
+            getOrderConnect();
             return null;
         }
 
     }
 
-    private List<ArthikaHFT.orderTick> getOrderConnect() {
+    private void getOrderConnect() {
         try {
-            List<ArthikaHFT.orderTick> orderList = wrapper.getOrder(null, null, null);
-            return orderList;
+            orderList = wrapper.getOrder(null, null, null);
+            if (orderList==null) {
+                orderList = new ArrayList<ArthikaHFT.orderTick>();
+            }
+            for (int i = 0; i < orderList.size(); i++) {
+                ArthikaHFT.orderTick order = orderList.get(i);
+                orderArray.add((i + 1) * ORDER_COLUMNS, order.security);
+                orderArray.add((i + 1) * ORDER_COLUMNS + 1, String.valueOf(order.quantity));
+                orderArray.add((i + 1) * ORDER_COLUMNS + 2,order.side);
+                orderArray.add((i + 1) * ORDER_COLUMNS + 3, String.valueOf(order.priceatstart));
+                orderArray.add((i + 1) * ORDER_COLUMNS + 4,order.status);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return null;
     }
 
     class MyTimerTask extends TimerTask {
@@ -334,9 +244,16 @@ public class MainActivity extends AppCompatActivity {
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
                         PricesFragment.updateTimeTextView.setText(dateFormat.format(date));
                     }
-                    ArrayAdapter adapter = (ArrayAdapter) PricesFragment.pricesGridView.getAdapter();
-                    adapter.notifyDataSetChanged();
-                    PricesFragment.pricesGridView.setAdapter(adapter);
+                    ArrayAdapter priceAdapter = (ArrayAdapter) PricesFragment.pricesGridView.getAdapter();
+                    priceAdapter.notifyDataSetChanged();
+                    PricesFragment.pricesGridView.setAdapter(priceAdapter);
+
+                    ArrayAdapter orderAdapter = (ArrayAdapter) OrderFragment.orderGridView.getAdapter();
+                    orderAdapter.notifyDataSetChanged();
+                    OrderFragment.orderGridView.setAdapter(orderAdapter);
+
+                    PricePop.refresh();
+
                 }});
         }
 
@@ -360,7 +277,6 @@ public class MainActivity extends AppCompatActivity {
                 return PricesFragment.newInstance();
             }
             if (position==1) {
-                orderList = getOrder();
                 return OrderFragment.newInstance();
             }
             return null;
@@ -427,7 +343,7 @@ public class MainActivity extends AppCompatActivity {
             stopButton.setEnabled(false);
 
             updateTimeTextView = (TextView) view.findViewById(R.id.updateTimeTextView);
-            updateTimeTextView.setText("Click 'Start' for streaming prices");
+            updateTimeTextView.setText("Click 'Start' for streaming");
 
             ArrayAdapter priceAdapter = new ArrayAdapter(this.getContext(), android.R.layout.simple_list_item_1, prices);
             priceAdapter.notifyDataSetChanged();
@@ -449,23 +365,12 @@ public class MainActivity extends AppCompatActivity {
                         stopButton.setEnabled(true);
                         updateTime = "";
                         updateTimeTextView.setText("Getting prices");
-
                         id = wrapper.getPriceBegin(secs, null, "tob", -1, new ArthikaHFTPriceListenerImp());
-
                         System.out.println("Starting :" + id);
-                        /*
-                        if (timer != null) {
-                            timer.cancel();
-                        }
-                        timer = new Timer();
-                        myTimerTask = new MyTimerTask();
-                        timer.schedule(myTimerTask, 0, 500);
-                        */
                         if (timer == null) {
                             timer = new Timer();
-                            timer.schedule(myTimerTask, 0, 500);
+                            timer.schedule(myTimerTask, 0, REFRESH_TIME);
                         }
-
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -480,21 +385,8 @@ public class MainActivity extends AppCompatActivity {
                     stopButton.setEnabled(false);
                     updateTimeTextView.setText("Streaming stopped");
                     try {
-                        /*
-                        if (timer != null) {
-                            timer.purge();
-                            timer.cancel();
-                            timer = null;
-                        }
-                        if (myTimerTask != null) {
-                            myTimerTask.cancel();
-                        }
-                        */
                         System.out.println("Finishing :" + id);
                         wrapper.getPriceEnd(id);
-                        for (String price : prices) {
-                            System.out.println(price);
-                        }
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -505,17 +397,26 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
                     System.out.println(position);
-                    if (position > 2 && (position % 3) != 0) {
+                    if (position > (PRICE_COLUMNS-1)) {
                         cellSelected = position;
+                        if ((cellSelected % PRICE_COLUMNS) == 0) {
+                            startActivity(new Intent(v.getContext(), PricePop.class));
+                            PricePop.asklist = new ArrayList<Double>();
+                            PricePop.bidlist = new ArrayList<Double>();
+                            PricePop.intervallist = new ArrayList<String>();
+                            PricePop.securitySelected = prices[cellSelected];
+                        }
                         String alertMessage = "";
-                        if ((cellSelected % 3) == 1) {
+                        if ((cellSelected % PRICE_COLUMNS) == 1) {
                             alertMessage = "BUY " + amountSpinner.getSelectedItem().toString() + " " + prices[(cellSelected - 1)] + " in " + TISpinner.getSelectedItem().toString();
+                            alertOrder.setMessage(alertMessage);
+                            alertOrder.show();
                         }
-                        if ((cellSelected % 3) == 2) {
+                        if ((cellSelected % PRICE_COLUMNS) == 2) {
                             alertMessage = "SELL " + amountSpinner.getSelectedItem().toString() + " " + prices[(cellSelected - 2)] + " in " + TISpinner.getSelectedItem().toString();
+                            alertOrder.setMessage(alertMessage);
+                            alertOrder.show();
                         }
-                        alertOrder.setMessage(alertMessage);
-                        alertOrder.show();
                     }
                 }
             });
@@ -530,7 +431,6 @@ public class MainActivity extends AppCompatActivity {
      */
     public static class OrderFragment extends Fragment {
 
-        static long id;
         static GridView orderGridView;
 
         /**
@@ -552,31 +452,21 @@ public class MainActivity extends AppCompatActivity {
 
             orderGridView = (GridView) view.findViewById(R.id.orderGridView);
 
-            if (orderList==null) {
-                orderList = new ArrayList<ArthikaHFT.orderTick>();
-                String[] orderArray = new String[6 * (orderList.size() + 1)];
-                orderArray[0] = "TI";
-                orderArray[1] = "Security";
-                orderArray[2] = "Quantity";
-                orderArray[3] = "Side";
-                orderArray[4] = "Price";
-                orderArray[5] = "Status";
-                for (int i = 0; i < orderList.size(); i++) {
-                    ArthikaHFT.orderTick order = orderList.get(i);
-                    prices[(i + 1) * 6] = order.tinterface;
-                    prices[(i + 1) * 6 + 1] = order.security;
-                    prices[(i + 1) * 6 + 2] = String.valueOf(order.quantity);
-                    prices[(i + 1) * 6 + 3] = order.side;
-                    prices[(i + 1) * 6 + 4] = String.valueOf(order.priceatstart);
-                    prices[(i + 1) * 6 + 5] = order.status;
-                }
-                ArrayAdapter<String> orderAdapter = new ArrayAdapter<String>(this.getContext(), android.R.layout.simple_list_item_1, orderArray);
-                orderAdapter.notifyDataSetChanged();
-                orderGridView.setAdapter(orderAdapter);
-            }
+            orderArray = new ArrayList<String> ();
+            orderArray.add("Security");
+            orderArray.add("Quantity");
+            orderArray.add("Side");
+            orderArray.add("Price");
+            orderArray.add("Status");
+
+            ArrayAdapter<String> orderAdapter = new ArrayAdapter<String>(this.getContext(), android.R.layout.simple_list_item_1, orderArray);
+            orderAdapter.notifyDataSetChanged();
+            orderGridView.setAdapter(orderAdapter);
 
             return view;
         }
 
     }
+
+
 }
