@@ -1,5 +1,6 @@
 package com.example.arthika.arthikahft;
 
+import android.app.ActionBar;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -10,6 +11,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -51,6 +53,11 @@ public class MainActivity extends AppCompatActivity {
     ViewPager mViewPager;
 
     static ArthikaHFT wrapper;
+    static int width;
+    static boolean started;
+    static long priceStreamingId;
+    static long orderStreamingId;
+    static long positionStreamingId;
     static String[] prices;
     static List<String> secs;
     static String[] TIlist;
@@ -59,11 +66,17 @@ public class MainActivity extends AppCompatActivity {
     static AlertDialog alertOrder;
     static Timer timer;
     static MyTimerTask myTimerTask;
-    static List<ArthikaHFT.orderTick> orderList;
-    static List<String> orderArray;
+    static List<String> pendingOrderArray;
+    static List<String> closedOrderArray;
+    static List<String> positionArray;
+    static List<String> assetArray;
 
-    private static final int PRICE_COLUMNS = 3;
-    private static final int ORDER_COLUMNS = 5;
+    public static final int DEFAULT_PAD = 16;
+    public static final int PRICE_COLUMNS = 3;
+    public static final int PENDINGORDER_COLUMNS = 6;
+    public static final int CLOSEDORDER_COLUMNS = 6;
+    public static final int POSITION_COLUMNS = 4;
+    public static final int ASSET_COLUMNS = 2;
     private static final int REFRESH_TIME = 500;
 
     @Override
@@ -75,12 +88,18 @@ public class MainActivity extends AppCompatActivity {
         // primary sections of the activity.
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        width = dm.widthPixels;
+
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
         wrapper = new ArthikaHFT("http://demo.arthikatrading.com");
         wrapper.doAuthentication("fedenice", "fedenice");
+
+        started = false;
 
         updateTime = "";
 
@@ -95,9 +114,14 @@ public class MainActivity extends AppCompatActivity {
             prices[(i + 1) * PRICE_COLUMNS + 2] = "0";
         }
 
-        amountlist = new Integer[]{1000, 2000, 5000, 10000};
+        amountlist = new Integer[]{100000, 200000, 500000, 1000000};
 
         TIlist = new String[]{"Baxter_CNX", "Cantor_CNX_3"};
+
+        pendingOrderArray = new ArrayList<String> ();
+        closedOrderArray = new ArrayList<String> ();
+        positionArray = new ArrayList<String> ();
+        assetArray = new ArrayList<String> ();
 
         AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
         alertBuilder.setCancelable(true);
@@ -119,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
 
         myTimerTask = new MyTimerTask();
 
-        getOrder();
+        //getOrder();
 
     }
 
@@ -187,74 +211,55 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void getOrder() {
-        getOrderConnection conn = new getOrderConnection();
-        conn.execute();
-    }
-
-    private class getOrderConnection extends AsyncTask {
-
-        @Override
-        protected Object doInBackground(Object... arg0) {
-            getOrderConnect();
-            return null;
-        }
-
-    }
-
-    private void getOrderConnect() {
-        try {
-            orderList = wrapper.getOrder(null, null, null);
-            if (orderList==null) {
-                orderList = new ArrayList<ArthikaHFT.orderTick>();
-            }
-            for (int i = 0; i < orderList.size(); i++) {
-                ArthikaHFT.orderTick order = orderList.get(i);
-                orderArray.add((i + 1) * ORDER_COLUMNS, order.security);
-                orderArray.add((i + 1) * ORDER_COLUMNS + 1, String.valueOf(order.quantity));
-                orderArray.add((i + 1) * ORDER_COLUMNS + 2,order.side);
-                orderArray.add((i + 1) * ORDER_COLUMNS + 3, String.valueOf(order.priceatstart));
-                orderArray.add((i + 1) * ORDER_COLUMNS + 4,order.status);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
     class MyTimerTask extends TimerTask {
 
         @Override
         public void run() {
 
-            runOnUiThread(new Runnable(){
+            runOnUiThread(new Runnable() {
 
                 @Override
                 public void run() {
-                    Calendar calendar = Calendar.getInstance();
-                    SimpleDateFormat simpleDateFormat =
-                            new SimpleDateFormat("dd:MMMM:yyyy HH:mm:ss a");
-                    final String strDate = simpleDateFormat.format(calendar.getTime());
-                    //System.out.println("DATE: " + strDate);
-                    if (updateTime!=null && !updateTime.equals("")) {
-                        long timelong = new Double(new Double(updateTime) * 1000).longValue();
-                        Date date = new Date();
-                        date.setTime(timelong);
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                        PricesFragment.updateTimeTextView.setText(dateFormat.format(date));
+
+                    if (PricesFragment.pricesGridView!=null) {
+                        Calendar calendar = Calendar.getInstance();
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd:MMMM:yyyy HH:mm:ss a");
+                        final String strDate = simpleDateFormat.format(calendar.getTime());
+                        if (updateTime != null && !updateTime.equals("")) {
+                            long timelong = new Double(new Double(updateTime) * 1000).longValue();
+                            Date date = new Date();
+                            date.setTime(timelong);
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                            PricesFragment.updateTimeTextView.setText(dateFormat.format(date));
+                        }
+                        ArrayAdapter priceAdapter = (ArrayAdapter) PricesFragment.pricesGridView.getAdapter();
+                        priceAdapter.notifyDataSetChanged();
+                        PricesFragment.pricesGridView.setAdapter(priceAdapter);
+                        PricePop.refresh();
                     }
-                    ArrayAdapter priceAdapter = (ArrayAdapter) PricesFragment.pricesGridView.getAdapter();
-                    priceAdapter.notifyDataSetChanged();
-                    PricesFragment.pricesGridView.setAdapter(priceAdapter);
 
-                    ArrayAdapter orderAdapter = (ArrayAdapter) OrderFragment.orderGridView.getAdapter();
-                    orderAdapter.notifyDataSetChanged();
-                    OrderFragment.orderGridView.setAdapter(orderAdapter);
+                    if (OrderFragment.pendingOrderGridView!=null) {
+                        ArrayAdapter pendingOrderAdapter = (ArrayAdapter) OrderFragment.pendingOrderGridView.getAdapter();
+                        pendingOrderAdapter.notifyDataSetChanged();
+                        OrderFragment.pendingOrderGridView.setAdapter(pendingOrderAdapter);
 
-                    PricePop.refresh();
+                        ArrayAdapter closedOrderAdapter = (ArrayAdapter) OrderFragment.closedOrderGridView.getAdapter();
+                        closedOrderAdapter.notifyDataSetChanged();
+                        OrderFragment.closedOrderGridView.setAdapter(closedOrderAdapter);
+                    }
 
-                }});
+                    if (PositionFragment.positionGridView!=null) {
+                        ArrayAdapter positionAdapter = (ArrayAdapter) PositionFragment.positionGridView.getAdapter();
+                        positionAdapter.notifyDataSetChanged();
+                        PositionFragment.positionGridView.setAdapter(positionAdapter);
+
+                        ArrayAdapter assetAdapter = (ArrayAdapter) PositionFragment.assetGridView.getAdapter();
+                        assetAdapter.notifyDataSetChanged();
+                        PositionFragment.assetGridView.setAdapter(assetAdapter);
+                    }
+
+                }
+            });
         }
 
     }
@@ -279,13 +284,16 @@ public class MainActivity extends AppCompatActivity {
             if (position==1) {
                 return OrderFragment.newInstance();
             }
+            if (position==2) {
+                return PositionFragment.newInstance();
+            }
             return null;
         }
 
         @Override
         public int getCount() {
             // Show 3 total pages.
-            return 2;
+            return 3;
         }
 
         @Override
@@ -308,7 +316,6 @@ public class MainActivity extends AppCompatActivity {
      */
     public static class PricesFragment extends Fragment {
 
-        static long id;
         static GridView pricesGridView;
         static TextView updateTimeTextView;
         static Button startButton;
@@ -333,17 +340,22 @@ public class MainActivity extends AppCompatActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.activity_prices, container, false);
+            System.out.println("CREATING PricesFragment");
 
             pricesGridView = (GridView) view.findViewById(R.id.pricesGridView);
 
             startButton = (Button) view.findViewById(R.id.startButton);
-            startButton.setEnabled(true);
-
             stopButton = (Button) view.findViewById(R.id.stopButton);
-            stopButton.setEnabled(false);
-
             updateTimeTextView = (TextView) view.findViewById(R.id.updateTimeTextView);
-            updateTimeTextView.setText("Click 'Start' for streaming");
+            if (started){
+                startButton.setEnabled(false);
+                stopButton.setEnabled(true);
+            }
+            else{
+                startButton.setEnabled(true);
+                stopButton.setEnabled(false);
+                updateTimeTextView.setText("Click 'Start' for streaming");
+            }
 
             ArrayAdapter priceAdapter = new ArrayAdapter(this.getContext(), android.R.layout.simple_list_item_1, prices);
             priceAdapter.notifyDataSetChanged();
@@ -360,13 +372,18 @@ public class MainActivity extends AppCompatActivity {
             startButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    started = true;
+                    startButton.setEnabled(false);
+                    stopButton.setEnabled(true);
+                    updateTime = "";
+                    updateTimeTextView.setText("Getting prices");
                     try {
-                        startButton.setEnabled(false);
-                        stopButton.setEnabled(true);
-                        updateTime = "";
-                        updateTimeTextView.setText("Getting prices");
-                        id = wrapper.getPriceBegin(secs, null, "tob", -1, new ArthikaHFTPriceListenerImp());
-                        System.out.println("Starting :" + id);
+                        priceStreamingId = wrapper.getPriceBegin(secs, null, "tob", 1, new ArthikaHFTPriceListenerImp());
+                        System.out.println("Starting :" + priceStreamingId);
+                        orderStreamingId = wrapper.getOrderBegin(null, null, null, new ArthikaHFTPriceListenerImp());
+                        System.out.println("Starting :" + orderStreamingId);
+                        positionStreamingId = wrapper.getPositionBegin(null, null, null, new ArthikaHFTPriceListenerImp());
+                        System.out.println("Starting :" + positionStreamingId);
                         if (timer == null) {
                             timer = new Timer();
                             timer.schedule(myTimerTask, 0, REFRESH_TIME);
@@ -381,12 +398,17 @@ public class MainActivity extends AppCompatActivity {
             stopButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    started = false;
                     startButton.setEnabled(true);
                     stopButton.setEnabled(false);
                     updateTimeTextView.setText("Streaming stopped");
                     try {
-                        System.out.println("Finishing :" + id);
-                        wrapper.getPriceEnd(id);
+                        System.out.println("Finishing :" + priceStreamingId);
+                        wrapper.getPriceEnd(priceStreamingId);
+                        System.out.println("Finishing :" + orderStreamingId);
+                        wrapper.getPriceEnd(orderStreamingId);
+                        System.out.println("Finishing :" + positionStreamingId);
+                        wrapper.getPriceEnd(positionStreamingId);
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -396,14 +418,10 @@ public class MainActivity extends AppCompatActivity {
             pricesGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
-                    System.out.println(position);
-                    if (position > (PRICE_COLUMNS-1)) {
+                    if (position > (PRICE_COLUMNS - 1)) {
                         cellSelected = position;
                         if ((cellSelected % PRICE_COLUMNS) == 0) {
                             startActivity(new Intent(v.getContext(), PricePop.class));
-                            PricePop.asklist = new ArrayList<Double>();
-                            PricePop.bidlist = new ArrayList<Double>();
-                            PricePop.intervallist = new ArrayList<String>();
                             PricePop.securitySelected = prices[cellSelected];
                         }
                         String alertMessage = "";
@@ -431,7 +449,10 @@ public class MainActivity extends AppCompatActivity {
      */
     public static class OrderFragment extends Fragment {
 
-        static GridView orderGridView;
+        static GridView pendingOrderGridView;
+        static GridView pendingOrderHeaderGridView;
+        static GridView closedOrderGridView;
+        static GridView closedOrderHeaderGridView;
 
         /**
          * Returns a new instance of this fragment for the given section
@@ -449,24 +470,118 @@ public class MainActivity extends AppCompatActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.activity_order, container, false);
+            System.out.println("CREATING OrderFragment");
 
-            orderGridView = (GridView) view.findViewById(R.id.orderGridView);
+            pendingOrderHeaderGridView = (GridView) view.findViewById(R.id.pendingOrderHeaderGridView);
+            pendingOrderHeaderGridView.setNumColumns(PENDINGORDER_COLUMNS);
+            pendingOrderHeaderGridView.setPadding(-(width - 5 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 1), 0, 0, 0);
+            List<String> pendingOrderHeaderArray = new ArrayList<String> ();
+            pendingOrderHeaderArray.add("Id");
+            pendingOrderHeaderArray.add("Security");
+            pendingOrderHeaderArray.add("Quantity");
+            pendingOrderHeaderArray.add("Side");
+            pendingOrderHeaderArray.add("Price");
+            pendingOrderHeaderArray.add("Status");
+            ArrayAdapter<String> pendingOrderHeaderAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridviewheader_format, pendingOrderHeaderArray);
+            pendingOrderHeaderAdapter.notifyDataSetChanged();
+            pendingOrderHeaderGridView.setAdapter(pendingOrderHeaderAdapter);
 
-            orderArray = new ArrayList<String> ();
-            orderArray.add("Security");
-            orderArray.add("Quantity");
-            orderArray.add("Side");
-            orderArray.add("Price");
-            orderArray.add("Status");
+            pendingOrderGridView = (GridView) view.findViewById(R.id.pendingOrderGridView);
+            pendingOrderGridView.setNumColumns(PENDINGORDER_COLUMNS);
+            pendingOrderGridView.setPadding(-(width - 5 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 1), 0, 0, 0);
+            ArrayAdapter<String> pendingOrderAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridview_format, pendingOrderArray);
+            pendingOrderAdapter.notifyDataSetChanged();
+            pendingOrderGridView.setAdapter(pendingOrderAdapter);
 
-            ArrayAdapter<String> orderAdapter = new ArrayAdapter<String>(this.getContext(), android.R.layout.simple_list_item_1, orderArray);
-            orderAdapter.notifyDataSetChanged();
-            orderGridView.setAdapter(orderAdapter);
+            closedOrderHeaderGridView = (GridView) view.findViewById(R.id.closedOrderHeaderGridView);
+            closedOrderHeaderGridView.setNumColumns(CLOSEDORDER_COLUMNS);
+            closedOrderHeaderGridView.setPadding(-(width - 5 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 1), 0, 0, 0);
+            List<String> closedOrderHeaderArray = new ArrayList<String> ();
+            closedOrderHeaderArray.add("Id");
+            closedOrderHeaderArray.add("Security");
+            closedOrderHeaderArray.add("Quantity");
+            closedOrderHeaderArray.add("Side");
+            closedOrderHeaderArray.add("Price");
+            closedOrderHeaderArray.add("Status");
+            ArrayAdapter<String> closedOrderHeaderAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridviewheader_format, closedOrderHeaderArray);
+            closedOrderHeaderAdapter.notifyDataSetChanged();
+            closedOrderHeaderGridView.setAdapter(closedOrderHeaderAdapter);
+
+            closedOrderGridView = (GridView) view.findViewById(R.id.closedOrderGridView);
+            closedOrderGridView.setNumColumns(CLOSEDORDER_COLUMNS);
+            closedOrderGridView.setPadding(-(width - 5 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 1), 0, 0, 0);
+            ArrayAdapter<String> closedOrderAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridview_format, closedOrderArray);
+            closedOrderAdapter.notifyDataSetChanged();
+            closedOrderGridView.setAdapter(closedOrderAdapter);
 
             return view;
         }
 
     }
 
+    /**
+     * A placeholder fragment containing a simple view.
+     */
+    public static class PositionFragment extends Fragment {
+
+        static GridView positionGridView;
+        static GridView positionHeaderGridView;
+        static GridView assetGridView;
+        static GridView assetHeaderGridView;
+
+        /**
+         * Returns a new instance of this fragment for the given section
+         * number.
+         */
+        public static PositionFragment newInstance() {
+            PositionFragment fragment = new PositionFragment();
+            return fragment;
+        }
+
+        public PositionFragment() {
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View view = inflater.inflate(R.layout.activity_position, container, false);
+            System.out.println("CREATING PositionFragment");
+
+            positionHeaderGridView = (GridView) view.findViewById(R.id.positionHeaderGridView);
+            positionHeaderGridView.setNumColumns(POSITION_COLUMNS);
+            List<String> positionHeaderArray = new ArrayList<String> ();
+            positionHeaderArray.add("Security");
+            positionHeaderArray.add("Position");
+            positionHeaderArray.add("Side");
+            positionHeaderArray.add("Avg.Price");
+            ArrayAdapter<String> positionHeaderAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridviewheader_format, positionHeaderArray);
+            positionHeaderAdapter.notifyDataSetChanged();
+            positionHeaderGridView.setAdapter(positionHeaderAdapter);
+
+            positionGridView = (GridView) view.findViewById(R.id.positionGridView);
+            positionGridView.setNumColumns(POSITION_COLUMNS);
+            ArrayAdapter<String> positionAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridview_format, positionArray);
+            positionAdapter.notifyDataSetChanged();
+            positionGridView.setAdapter(positionAdapter);
+
+            assetHeaderGridView = (GridView) view.findViewById(R.id.assetHeaderGridView);
+            assetHeaderGridView.setNumColumns(ASSET_COLUMNS);
+            List<String> assetHeaderArray = new ArrayList<String> ();
+            assetHeaderArray.add("Currency");
+            assetHeaderArray.add("Position");
+            ArrayAdapter<String> assetHeaderAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridviewheader_format, assetHeaderArray);
+            assetHeaderAdapter.notifyDataSetChanged();
+            assetHeaderGridView.setAdapter(assetHeaderAdapter);
+
+            assetGridView = (GridView) view.findViewById(R.id.assetGridView);
+            assetGridView.setNumColumns(ASSET_COLUMNS);
+            ArrayAdapter<String> assetAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridview_format, assetArray);
+            assetAdapter.notifyDataSetChanged();
+            assetGridView.setAdapter(assetAdapter);
+
+            return view;
+        }
+
+    }
 
 }

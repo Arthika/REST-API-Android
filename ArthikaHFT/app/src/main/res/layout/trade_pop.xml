@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#74ff1d">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="40dp" >
+
+        <TextView
+            android:layout_width="175dp"
+            android:layout_height="wrap_content"
+            android:text="@string/SelectAmount"
+            android:id="@+id/textView"
+            android:layout_weight="0.5" />
+
+        <Spinner
+            android:layout_width="175dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/spinner"
+            android:clickable="false"
+            android:layout_weight="0.5" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:id="@+id/LinearLayout" >
+
+        <TextView
+            android:layout_width="175dp"
+            android:layout_height="wrap_content"
+            android:text="@string/SelectTI"
+            android:id="@+id/textView"
+            android:layout_weight="0.5" />
+
+        <Spinner
+            android:layout_width="175dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/spinner"
+            android:layout_weight="0.5" />
+    </LinearLayout>
+
+</LinearLayout>

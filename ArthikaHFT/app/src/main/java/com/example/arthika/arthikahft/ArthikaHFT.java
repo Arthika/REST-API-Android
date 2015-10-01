@@ -247,6 +247,7 @@ public class ArthikaHFT {
         public int     expiration;
         public int     userparam;
         public int     tempid;
+        public String  result;
     }
 
     public static class positionTick {
@@ -540,18 +541,9 @@ public class ArthikaHFT {
         mapper.configure(SerializationConfig.Feature.SORT_PROPERTIES_ALPHABETICALLY, false);
         mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
         StringEntity request = new StringEntity(mapper.writeValueAsString(hftrequest));
-        if (stream) {
-            request = new StringEntity("{\"getPrice\":{\"user\":\"fedenice\",\"token\":\"fedenice\",\"security\":[\"EUR_USD\", \"EUR_GBP\", \"EUR_JPY\", \"USD_JPY\", \"GBP_USD\", \"GBP_JPY\", \"AUD_USD\", \"USD_CAD\"],\"tinterface\":[\"Baxter_CNX\",\"Cantor_CNX_3\"],\"granularity\":\"TOB\",\"levels\":1}}");
-        }
-        else{
-            if(urlpath.equals("setOrder")) {
-                request = new StringEntity("{\"setOrder\":{\"user\":\"fedenice\",\"token\":\"fedenice\",\"order\":[{\"security\":\"EUR_USD\",\"tinterface\":\"Baxter_CNX\",\"quantity\":5000,\"side\":\"buy\",\"type\":\"market\",\"price\":0.0,\"expiration\":0,\"userparam\":0,\"tempid\":0}]}}");
-            }
-            if(urlpath.equals("getOrder")) {
-                request = new StringEntity("{\"getOrder\":{\"user\":\"fedenice\",\"token\":\"fedenice\"}}");
-            }
-        }
-        System.out.println(mapper.writeValueAsString(hftrequest));
+
+        request = new StringEntity(mapper.writeValueAsString(hftrequest).replaceAll("\n","").replaceAll(" ",""));
+        System.out.println(mapper.writeValueAsString(hftrequest).replace("\n","").replaceAll(" ",""));
         responseHandler.setObjectMapper(mapper);
         responseHandler.setStream(stream);
         HttpPost httpRequest;
