@@ -1,6 +1,6 @@
-.gradle
+/.gradle
 /.idea
 /build
-/local.properties
-.DS_Store
-/captures
+/gradle
+local.properties
+gradlew.bat

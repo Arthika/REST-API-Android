@@ -8,12 +8,10 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpPost;
-//import org.apache.http.client.methods.HttpPostHC4;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
-//import org.apache.http.util.EntityUtilsHC4;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -42,15 +40,16 @@ interface ArthikaHFTPriceListener {
 
 public class ArthikaHFT {
 
-    private String	URL;
-    private String	user;
-    private String	password;
-    private String	token = null;
+    private String domain;
+    private String user;
+    private String password;
+    private String authentication_port;
+    private String request_port;
+    private String token = null;
     private HashMap<ThreadExecution,myResponseHandler> threadmap;
 
     private final static String STREAMINGURL = "cgi-bin/IHFTRestStreamer/";
     private final static String POLLINGURL = "fcgi-bin/IHFTRestAPI/";
-    private final static String PORT = "81";
 
     public static class hftRequest {
         public getPriceRequest     getPrice;
@@ -311,7 +310,7 @@ public class ArthikaHFT {
         public String  result;
     }
 
-    public class myResponseHandler implements ResponseHandler {
+    public class myResponseHandler implements ResponseHandler<String> {
 
         private ObjectMapper mapper;
         private boolean stream = true;
@@ -360,7 +359,8 @@ public class ArthikaHFT {
             this.stream = stream;
         }
 
-        public String handleResponse(final HttpResponse httpresponse) throws IOException {
+        @Override
+        public String handleResponse(final HttpResponse httpresponse) throws ClientProtocolException, IOException {
             int status = httpresponse.getStatusLine().getStatusCode();
             BufferedReader bufferedReader;
             if (status >= 200 && status < 300) {
@@ -522,12 +522,12 @@ public class ArthikaHFT {
 
     }
 
-    public ArthikaHFT(){
-        init();
-    }
-
-    public ArthikaHFT(String URL){
-        this.URL = URL;
+    public ArthikaHFT(String domain, String user, String password, String authentication_port, String request_port){
+        this.domain = domain;
+        this.user = user;
+        this.password = password;
+        this.authentication_port = authentication_port;
+        this.request_port = request_port;
         init();
     }
 
@@ -535,9 +535,7 @@ public class ArthikaHFT {
         threadmap = new HashMap<ThreadExecution,myResponseHandler>();
     }
 
-    public void doAuthentication(String user, String password){
-        this.user = user;
-        this.password = password;
+    public void doAuthentication(){
         // TODO generate token
         this.token = this.password;
     }
@@ -641,15 +639,13 @@ public class ArthikaHFT {
 
         mapper.setSerializationInclusion(Inclusion.NON_NULL);
         mapper.configure(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-        mapper.configure(SerializationConfig.Feature.SORT_PROPERTIES_ALPHABETICALLY, false);
-        mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
-        StringEntity request = new StringEntity(mapper.writeValueAsString(hftrequest).replaceAll("\n","").replaceAll(" ",""));
-        System.out.println(mapper.writeValueAsString(hftrequest).replace("\n","").replaceAll(" ",""));
+        StringEntity request = new StringEntity(mapper.writeValueAsString(hftrequest).replaceAll("\n","").replaceAll(" ", ""));
+        System.out.println(mapper.writeValueAsString(hftrequest).replace("\n","").replaceAll(" ", ""));
         responseHandler.setObjectMapper(mapper);
         responseHandler.setStream(stream);
         HttpPost httpRequest;
         if (stream){
-            httpRequest = new HttpPost(URL + ":" + PORT + "/" + STREAMINGURL + urlpath);
+            httpRequest = new HttpPost(domain + ":" + request_port + "/" + STREAMINGURL + urlpath);
             httpRequest.setEntity(request);
             responseHandler.listener = listener;
             ThreadExecution T = new ThreadExecution(client, httpRequest, responseHandler);
@@ -660,7 +656,7 @@ public class ArthikaHFT {
             return T.getId();
         }
         else{
-            httpRequest = new HttpPost(URL + ":" + PORT + "/" + POLLINGURL + urlpath);
+            httpRequest = new HttpPost(domain + ":" + request_port + "/" + POLLINGURL + urlpath);
             httpRequest.setEntity(request);
             client.execute(httpRequest, responseHandler);
         }

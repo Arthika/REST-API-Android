@@ -22,7 +22,9 @@ import android.widget.Button;
 import android.widget.GridView;
 import android.widget.TextView;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +32,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -51,6 +54,11 @@ public class MainActivity extends AppCompatActivity {
     ViewPager mViewPager;
 
     static ArthikaHFT wrapper;
+    private static String domain;
+    private static String user;
+    private static String password;
+    private static String authentication_port;
+    private static String request_port;
     static int width;
     static boolean started;
     static long priceStreamingId;
@@ -96,8 +104,11 @@ public class MainActivity extends AppCompatActivity {
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
-        wrapper = new ArthikaHFT("http://demo.arthikatrading.com");
-        wrapper.doAuthentication("fedenice", "fedenice");
+        // get properties from file
+        getProperties();
+
+        wrapper = new ArthikaHFT(domain, user, password, authentication_port, request_port);
+        wrapper.doAuthentication();
 
         started = false;
 
@@ -170,10 +181,32 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void a(){
-        myTimerTask = new MyTimerTask();
+    public void getProperties(){
+        Properties prop = new Properties();
+        InputStream input = null;
+        try {
+            input = getAssets().open("config.properties");
+            prop.load(input);
+            domain = prop.getProperty("domain");
+            user = prop.getProperty("user");
+            password = prop.getProperty("password");
+            authentication_port = prop.getProperty("authentication-port");
+            request_port = prop.getProperty("request-port");
+        }
+        catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        finally {
+            if (input != null) {
+                try {
+                    input.close();
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
-
 
     private void cancelOrder() {
         new cancelOrderConnection().execute();
