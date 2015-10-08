@@ -126,7 +126,7 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
     @Override
     public void orderEvent(List<ArthikaHFT.orderTick> orderTickList) {
         for (ArthikaHFT.orderTick tick : orderTickList){
-            System.out.println("TempId: " + tick.tempid + " OrderId: " + tick.orderid + " Security: " + tick.security + " Account: " + tick.account + " Quantity: " + tick.quantity + " Type: " + tick.type + " Side: " + tick.side + " Status: " + tick.status);
+            System.out.println("TempId: " + tick.tempid + " OrderId: " + tick.orderid + " FixId: " + tick.fixid + " Security: " + tick.security + " Account: " + tick.account + " Quantity: " + tick.quantity + " Type: " + tick.type + " Side: " + tick.side + " Status: " + tick.status);
             String orderid = tick.orderid;
             if ("in flux".equals(tick.status)) {
                 continue;
@@ -135,11 +135,11 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                 boolean found = false;
                 for (int i = 0; i < MainActivity.pendingOrderArray.size(); i = i+MainActivity.PENDINGORDER_COLUMNS) {
                     if (orderid.equals(MainActivity.pendingOrderArray.get(i))) {
-                        MainActivity.pendingOrderArray.set(i + 1, tick.security);
-                        MainActivity.pendingOrderArray.set(i + 2, String.valueOf(tick.quantity));
-                        MainActivity.pendingOrderArray.set(i + 3, tick.side);
-                        MainActivity.pendingOrderArray.set(i + 4, String.format("%." + tick.pips + "f", tick.priceatstart));
-                        MainActivity.pendingOrderArray.set(i + 5, tick.status);
+                        MainActivity.pendingOrderArray.set(i + 1, tick.fixid);
+                        MainActivity.pendingOrderArray.set(i + 2, tick.security);
+                        MainActivity.pendingOrderArray.set(i + 3, String.valueOf(tick.quantity));
+                        MainActivity.pendingOrderArray.set(i + 4, tick.side);
+                        MainActivity.pendingOrderArray.set(i + 5, String.format("%." + tick.pips + "f", tick.limitprice));
                         System.out.println("Pending Order Modified");
                         found = true;
                         break;
@@ -147,11 +147,13 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                 }
                 if (!found) {
                     MainActivity.pendingOrderArray.add(0, orderid);
-                    MainActivity.pendingOrderArray.add(1, tick.security);
-                    MainActivity.pendingOrderArray.add(2, String.valueOf(tick.quantity));
-                    MainActivity.pendingOrderArray.add(3, tick.side);
-                    MainActivity.pendingOrderArray.add(4, String.format("%." + tick.pips + "f", tick.priceatstart));
-                    MainActivity.pendingOrderArray.add(5, tick.status);
+                    MainActivity.pendingOrderArray.add(1, tick.fixid);
+                    MainActivity.pendingOrderArray.add(2, tick.security);
+                    MainActivity.pendingOrderArray.add(3, String.valueOf(tick.quantity));
+                    MainActivity.pendingOrderArray.add(4, tick.side);
+                    MainActivity.pendingOrderArray.add(5, String.format("%." + tick.pips + "f", tick.limitprice));
+                    MainActivity.pendingOrderArray.add(6, "Modify");
+                    MainActivity.pendingOrderArray.add(7, "Cancel");
                     System.out.println("Pending Order Added");
                 }
             }

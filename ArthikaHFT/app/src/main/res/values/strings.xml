@@ -4,10 +4,19 @@
     <string name="action_settings">Settings</string>
     <string name="Start">Start</string>
     <string name="Stop">Stop</string>
+    <string name="SelectAmount">Select Amount: </string>
+    <string name="SelectType">Select Order Type: </string>
+    <string name="SelectValidity">Select Validity: </string>
     <string name="SelectTI">Select TI: </string>
-    <string name="SelectAmount">Select amount: </string>
+    <string name="SelectPrice">Select Price: </string>
     <string name="PendingOrders">Pending Orders</string>
     <string name="ClosedOrders">Closed Orders</string>
     <string name="Positions">Positions</string>
     <string name="Assets">Assets</string>
+    <string name="Modify">Modify</string>
+    <string name="Cancel">Cancel</string>
+    <string name="OK">OK</string>
+    <string name="SelectNewAmount">Select New Amount: </string>
+    <string name="SelectNewPrice">Select New Price: </string>
+    <string name="CancelPendingOrders">Cancel Pending Orders</string>
 </resources>

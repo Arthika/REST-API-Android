@@ -57,6 +57,8 @@ public class ArthikaHFT {
         public getPositionRequest  getPosition;
         public getOrderRequest     getOrder;
         public setOrderRequest     setOrder;
+        public cancelOrderRequest  cancelOrder;
+        public modifyOrderRequest  modifyOrder;
 
         private hftRequest() {
         }
@@ -67,6 +69,8 @@ public class ArthikaHFT {
         public getPositionResponse getPositionResponse;
         public getOrderResponse    getOrderResponse;
         public setOrderResponse    setOrderResponse;
+        public cancelOrderResponse cancelOrderResponse;
+        public modifyOrderResponse modifyOrderResponse;
     }
 
     public static class getPriceRequest {
@@ -164,6 +168,42 @@ public class ArthikaHFT {
         public String           timestamp;
     }
 
+    public static class cancelOrderRequest {
+        public String        user;
+        public String        token;
+        public List<String>  fixid;
+
+        public cancelOrderRequest( String user, String token, List<String> fixid ) {
+            this.user = user;
+            this.token = token;
+            this.fixid = fixid;
+        }
+    }
+
+    public static class cancelOrderResponse {
+        public List<cancelTick> order;
+        public String           message;
+        public String           timestamp;
+    }
+
+    public static class modifyOrderRequest {
+        public String        user;
+        public String        token;
+        public List<modOrder>   order;
+
+        public modifyOrderRequest( String user, String token, List<modOrder> order ) {
+            this.user = user;
+            this.token = token;
+            this.order = order;
+        }
+    }
+
+    public static class modifyOrderResponse {
+        public List<modifyTick> order;
+        public String           message;
+        public String           timestamp;
+    }
+
     public static class priceTick {
         public String  security;
         public String  tinterface;
@@ -255,6 +295,22 @@ public class ArthikaHFT {
         public List<securityPositionTick> securityPositionTickList;
     }
 
+    public static class cancelTick {
+        public String  fixid;
+        public String  result;
+    }
+
+    public static class modOrder {
+        public String  fixid;
+        public double  price;
+        public int     quantity;
+    }
+
+    public static class modifyTick {
+        public String  fixid;
+        public String  result;
+    }
+
     public class myResponseHandler implements ResponseHandler {
 
         private ObjectMapper mapper;
@@ -264,6 +320,8 @@ public class ArthikaHFT {
         private List<securityPositionTick> securityPositionTickList = new ArrayList<securityPositionTick>();
         private List<orderRequest> orderList = new ArrayList<orderRequest>();
         private List<orderTick> orderTickList = new ArrayList<orderTick>();
+        private List<cancelTick> cancelTickList = new ArrayList<cancelTick>();
+        private List<modifyTick> modifyTickList = new ArrayList<modifyTick>();
         public ArthikaHFTPriceListener listener;
 
         public void setObjectMapper(ObjectMapper mapper){
@@ -288,6 +346,14 @@ public class ArthikaHFT {
 
         public List<orderRequest> getOrderList() {
             return orderList;
+        }
+
+        public List<cancelTick> getCancelList() {
+            return cancelTickList;
+        }
+
+        public List<modifyTick> getModifyList() {
+            return modifyTickList;
         }
 
         public void setStream(boolean stream){
@@ -408,6 +474,28 @@ public class ArthikaHFT {
                                 //listener.messageEvent(response.setOrderResponse.message);
                             }
                         }
+                        if (response.cancelOrderResponse!=null){
+                            if (response.cancelOrderResponse.timestamp != null){
+                                //listener.timestampEvent(response.cancelOrderResponse.timestamp);
+                            }
+                            if (response.cancelOrderResponse.order != null){
+                                this.cancelTickList = response.cancelOrderResponse.order;
+                            }
+                            if (response.cancelOrderResponse.message != null){
+                                //listener.messageEvent(response.cancelOrderResponse.message);
+                            }
+                        }
+                        if (response.modifyOrderResponse!=null){
+                            if (response.modifyOrderResponse.timestamp != null){
+                                //listener.timestampEvent(response.modifyOrderResponse.timestamp);
+                            }
+                            if (response.modifyOrderResponse.order != null){
+                                this.modifyTickList = response.modifyOrderResponse.order;
+                            }
+                            if (response.modifyOrderResponse.message != null){
+                                //listener.messageEvent(response.modifyOrderResponse.message);
+                            }
+                        }
                     }
                 }
                 catch (IOException e) {
@@ -518,10 +606,25 @@ public class ArthikaHFT {
     public List<orderRequest> setOrder(List<orderRequest> orders) throws IOException, InterruptedException {
         hftRequest hftrequest = new hftRequest();
         hftrequest.setOrder = new setOrderRequest(user, token, orders);
-        //BasicResponseHandler responseHandler = new BasicResponseHandler();
         myResponseHandler responseHandler = new myResponseHandler();
         sendRequest(hftrequest, responseHandler, "setOrder", false, null);
         return responseHandler.getOrderList();
+    }
+
+    public List<cancelTick> cancelOrder(List<String> orders) throws IOException, InterruptedException {
+        hftRequest hftrequest = new hftRequest();
+        hftrequest.cancelOrder = new cancelOrderRequest(user, token, orders);
+        myResponseHandler responseHandler = new myResponseHandler();
+        sendRequest(hftrequest, responseHandler, "cancelOrder", false, null);
+        return responseHandler.getCancelList();
+    }
+
+    public List<modifyTick> modifyOrder(List<modOrder> orders) throws IOException, InterruptedException {
+        hftRequest hftrequest = new hftRequest();
+        hftrequest.modifyOrder = new modifyOrderRequest(user, token, orders);
+        myResponseHandler responseHandler = new myResponseHandler();
+        sendRequest(hftrequest, responseHandler, "modifyOrder", false, null);
+        return responseHandler.getModifyList();
     }
 
     private long sendRequest(hftRequest hftrequest, myResponseHandler responseHandler, String urlpath, boolean stream, ArthikaHFTPriceListener listener) throws IOException, InterruptedException {
@@ -532,7 +635,7 @@ public class ArthikaHFT {
 
         final ObjectMapper mapper = new ObjectMapper();
         List<Header> headers = new ArrayList<Header>();
-        headers.add(new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json") );
+        headers.add(new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"));
         headers.add(new BasicHeader(HttpHeaders.ACCEPT, "application/json"));
         CloseableHttpClient client = HttpClients.custom().setDefaultHeaders(headers).build();
 
@@ -540,9 +643,7 @@ public class ArthikaHFT {
         mapper.configure(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
         mapper.configure(SerializationConfig.Feature.SORT_PROPERTIES_ALPHABETICALLY, false);
         mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
-        StringEntity request = new StringEntity(mapper.writeValueAsString(hftrequest));
-
-        request = new StringEntity(mapper.writeValueAsString(hftrequest).replaceAll("\n","").replaceAll(" ",""));
+        StringEntity request = new StringEntity(mapper.writeValueAsString(hftrequest).replaceAll("\n","").replaceAll(" ",""));
         System.out.println(mapper.writeValueAsString(hftrequest).replace("\n","").replaceAll(" ",""));
         responseHandler.setObjectMapper(mapper);
         responseHandler.setStream(stream);

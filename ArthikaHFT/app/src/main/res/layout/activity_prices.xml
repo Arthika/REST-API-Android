@@ -43,50 +43,11 @@
 
         <GridView
             android:layout_width="match_parent"
-            android:layout_height="340dp"
+            android:layout_height="wrap_content"
             android:id="@+id/pricesGridView"
-            android:numColumns="3" />
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="40dp">
-
-            <TextView
-                android:layout_width="175dp"
-                android:layout_height="wrap_content"
-                android:text="@string/SelectAmount"
-                android:id="@+id/selectAmountTextView"
-                android:layout_weight="0.5" />
-
-            <Spinner
-                android:layout_width="175dp"
-                android:layout_height="wrap_content"
-                android:id="@+id/amountSpinner"
-                android:clickable="false"
-                android:layout_weight="0.5" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:id="@+id/LinearLayout">
-
-            <TextView
-                android:layout_width="175dp"
-                android:layout_height="wrap_content"
-                android:text="@string/SelectTI"
-                android:id="@+id/selectTITextView"
-                android:layout_weight="0.5" />
-
-            <Spinner
-                android:layout_width="175dp"
-                android:layout_height="wrap_content"
-                android:id="@+id/TISpinner"
-                android:layout_weight="0.5" />
-
-        </LinearLayout>
+            android:numColumns="3"
+            android:verticalSpacing="0dp"
+            android:horizontalSpacing="0dp" />
 
     </LinearLayout>
 

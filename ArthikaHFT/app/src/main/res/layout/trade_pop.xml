@@ -4,22 +4,27 @@
     android:layout_height="match_parent"
     android:background="#74ff1d">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tradeSecTextView" />
+
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="40dp" >
+        android:layout_height="40dp">
 
         <TextView
             android:layout_width="175dp"
             android:layout_height="wrap_content"
             android:text="@string/SelectAmount"
-            android:id="@+id/textView"
+            android:id="@+id/selectTradeAmountTextView"
             android:layout_weight="0.5" />
 
         <Spinner
             android:layout_width="175dp"
             android:layout_height="wrap_content"
-            android:id="@+id/spinner"
+            android:id="@+id/tradeAmountSpinner"
             android:clickable="false"
             android:layout_weight="0.5" />
     </LinearLayout>
@@ -27,20 +32,111 @@
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:id="@+id/LinearLayout" >
+        android:layout_height="40dp">
 
         <TextView
             android:layout_width="175dp"
             android:layout_height="wrap_content"
-            android:text="@string/SelectTI"
-            android:id="@+id/textView"
+            android:text="@string/SelectType"
+            android:id="@+id/selectTradeTypeTextView"
             android:layout_weight="0.5" />
 
         <Spinner
             android:layout_width="175dp"
             android:layout_height="wrap_content"
-            android:id="@+id/spinner"
+            android:id="@+id/tradeTypeSpinner"
+            android:layout_weight="0.5" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="40dp">
+
+        <TextView
+            android:layout_width="175dp"
+            android:layout_height="wrap_content"
+            android:text="@string/SelectValidity"
+            android:id="@+id/selectTradeValidityTextView"
+            android:layout_weight="0.5" />
+
+        <Spinner
+            android:layout_width="175dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/tradeValiditySpinner"
+            android:layout_weight="0.5" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="40dp">
+
+        <TextView
+            android:layout_width="175dp"
+            android:layout_height="wrap_content"
+            android:text="@string/SelectTI"
+            android:id="@+id/selectTradeTITextView"
+            android:layout_weight="0.5" />
+
+        <Spinner
+            android:layout_width="175dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/tradeTISpinner"
+            android:layout_weight="0.5" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="175dp"
+            android:layout_height="wrap_content"
+            android:text="@string/SelectPrice"
+            android:id="@+id/selectTradePriceTextView"
+            android:layout_weight="0.5" />
+
+        <EditText
+            android:layout_width="175dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:ems="10"
+            android:id="@+id/tradePriceEditText"
+            android:layout_weight="0.5" />
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/tradeMessageTextView"
+        android:layout_gravity="center_horizontal" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/Cancel"
+            android:id="@+id/tradeCancelButton"
+            android:layout_weight="0.5" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/OK"
+            android:id="@+id/tradeOKButton"
             android:layout_weight="0.5" />
     </LinearLayout>
 

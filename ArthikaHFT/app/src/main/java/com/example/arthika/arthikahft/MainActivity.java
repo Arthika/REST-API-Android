@@ -1,6 +1,5 @@
 package com.example.arthika.arthikahft;
 
-import android.app.ActionBar;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -21,7 +20,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -60,8 +58,10 @@ public class MainActivity extends AppCompatActivity {
     static long positionStreamingId;
     static String[] prices;
     static List<String> secs;
+    static String[] amountlist;
+    static String[] typelist;
+    static String[] validitylist;
     static String[] TIlist;
-    static Integer[] amountlist;
     static String updateTime;
     static AlertDialog alertOrder;
     static Timer timer;
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static final int DEFAULT_PAD = 16;
     public static final int PRICE_COLUMNS = 3;
-    public static final int PENDINGORDER_COLUMNS = 6;
+    public static final int PENDINGORDER_COLUMNS = 8;
     public static final int CLOSEDORDER_COLUMNS = 6;
     public static final int POSITION_COLUMNS = 4;
     public static final int ASSET_COLUMNS = 2;
@@ -114,8 +114,9 @@ public class MainActivity extends AppCompatActivity {
             prices[(i + 1) * PRICE_COLUMNS + 2] = "0";
         }
 
-        amountlist = new Integer[]{100000, 200000, 500000, 1000000};
-
+        amountlist = new String[]{"100000", "200000", "500000", "1000000"};
+        typelist = new String[]{"market","limit"};
+        validitylist = new String[]{"day", "good till cancel", "inmediate or cancel", "fill or kill", "date", "good for secs", "good for msecs"};
         TIlist = new String[]{"Baxter_CNX", "Cantor_CNX_3"};
 
         pendingOrderArray = new ArrayList<String> ();
@@ -129,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();
-                        sendOrder();
+                        cancelOrder();
                     }
                 });
         alertBuilder.setNegativeButton("No",
@@ -174,36 +175,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void sendOrder() {
-        new sendOrderConnection().execute();
+    private void cancelOrder() {
+        new cancelOrderConnection().execute();
     }
 
-    private class sendOrderConnection extends AsyncTask {
+    private class cancelOrderConnection extends AsyncTask {
 
         @Override
         protected Object doInBackground(Object... arg0) {
-            sendOrderConnect();
+            cancelOrderConnect();
             return null;
         }
 
     }
 
-    private void sendOrderConnect() {
-        ArthikaHFT.orderRequest order = new ArthikaHFT.orderRequest();
-        order.tinterface = PricesFragment.TISpinner.getSelectedItem().toString();
-        order.quantity = (int) PricesFragment.amountSpinner.getSelectedItem();
-        if ((PricesFragment.cellSelected % PRICE_COLUMNS)==1) {
-            order.security = prices[(PricesFragment.cellSelected-1)];
-            order.side = "buy";
-        }
-        if ((PricesFragment.cellSelected % PRICE_COLUMNS)==2) {
-            order.security = prices[(PricesFragment.cellSelected-2)];
-            order.side = "sell";
-        }
-        order.type = "market";
+    private void cancelOrderConnect() {
+        String fixid = pendingOrderArray.get(OrderFragment.cellSelected - 6);
 
         try {
-            wrapper.setOrder(Arrays.asList(order));
+            wrapper.cancelOrder(Arrays.asList(fixid));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -239,23 +229,31 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     if (OrderFragment.pendingOrderGridView!=null) {
-                        ArrayAdapter pendingOrderAdapter = (ArrayAdapter) OrderFragment.pendingOrderGridView.getAdapter();
-                        pendingOrderAdapter.notifyDataSetChanged();
-                        OrderFragment.pendingOrderGridView.setAdapter(pendingOrderAdapter);
+                        synchronized(pendingOrderArray) {
+                            ArrayAdapter pendingOrderAdapter = (ArrayAdapter) OrderFragment.pendingOrderGridView.getAdapter();
+                            pendingOrderAdapter.notifyDataSetChanged();
+                            OrderFragment.pendingOrderGridView.setAdapter(pendingOrderAdapter);
+                        }
 
-                        ArrayAdapter closedOrderAdapter = (ArrayAdapter) OrderFragment.closedOrderGridView.getAdapter();
-                        closedOrderAdapter.notifyDataSetChanged();
-                        OrderFragment.closedOrderGridView.setAdapter(closedOrderAdapter);
+                        synchronized(closedOrderArray) {
+                            ArrayAdapter closedOrderAdapter = (ArrayAdapter) OrderFragment.closedOrderGridView.getAdapter();
+                            closedOrderAdapter.notifyDataSetChanged();
+                            OrderFragment.closedOrderGridView.setAdapter(closedOrderAdapter);
+                        }
                     }
 
                     if (PositionFragment.positionGridView!=null) {
-                        ArrayAdapter positionAdapter = (ArrayAdapter) PositionFragment.positionGridView.getAdapter();
-                        positionAdapter.notifyDataSetChanged();
-                        PositionFragment.positionGridView.setAdapter(positionAdapter);
+                        synchronized(positionArray) {
+                            ArrayAdapter positionAdapter = (ArrayAdapter) PositionFragment.positionGridView.getAdapter();
+                            positionAdapter.notifyDataSetChanged();
+                            PositionFragment.positionGridView.setAdapter(positionAdapter);
+                        }
 
-                        ArrayAdapter assetAdapter = (ArrayAdapter) PositionFragment.assetGridView.getAdapter();
-                        assetAdapter.notifyDataSetChanged();
-                        PositionFragment.assetGridView.setAdapter(assetAdapter);
+                        synchronized(assetArray) {
+                            ArrayAdapter assetAdapter = (ArrayAdapter) PositionFragment.assetGridView.getAdapter();
+                            assetAdapter.notifyDataSetChanged();
+                            PositionFragment.assetGridView.setAdapter(assetAdapter);
+                        }
                     }
 
                 }
@@ -321,8 +319,6 @@ public class MainActivity extends AppCompatActivity {
         static Button startButton;
         static Button stopButton;
         static int cellSelected;
-        static Spinner amountSpinner;
-        static Spinner TISpinner;
 
         /**
          * Returns a new instance of this fragment for the given section
@@ -360,14 +356,6 @@ public class MainActivity extends AppCompatActivity {
             ArrayAdapter priceAdapter = new ArrayAdapter(this.getContext(), android.R.layout.simple_list_item_1, prices);
             priceAdapter.notifyDataSetChanged();
             pricesGridView.setAdapter(priceAdapter);
-
-            ArrayAdapter<String> TIAdapter = new ArrayAdapter<String>(this.getContext(), android.R.layout.simple_spinner_dropdown_item, TIlist);
-            TISpinner = (Spinner) view.findViewById(R.id.TISpinner);
-            TISpinner.setAdapter(TIAdapter);
-
-            ArrayAdapter<Integer> amountAdapter = new ArrayAdapter<Integer>(this.getContext(), android.R.layout.simple_spinner_dropdown_item, amountlist);
-            amountSpinner = (Spinner) view.findViewById(R.id.amountSpinner);
-            amountSpinner.setAdapter(amountAdapter);
 
             startButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -424,16 +412,17 @@ public class MainActivity extends AppCompatActivity {
                             startActivity(new Intent(v.getContext(), PricePop.class));
                             PricePop.securitySelected = prices[cellSelected];
                         }
-                        String alertMessage = "";
                         if ((cellSelected % PRICE_COLUMNS) == 1) {
-                            alertMessage = "BUY " + amountSpinner.getSelectedItem().toString() + " " + prices[(cellSelected - 1)] + " in " + TISpinner.getSelectedItem().toString();
-                            alertOrder.setMessage(alertMessage);
-                            alertOrder.show();
+                            startActivity(new Intent(v.getContext(), TradePop.class));
+                            TradePop.securitySelected = prices[cellSelected-1];
+                            TradePop.side = "buy";
+                            TradePop.price = prices[cellSelected];
                         }
                         if ((cellSelected % PRICE_COLUMNS) == 2) {
-                            alertMessage = "SELL " + amountSpinner.getSelectedItem().toString() + " " + prices[(cellSelected - 2)] + " in " + TISpinner.getSelectedItem().toString();
-                            alertOrder.setMessage(alertMessage);
-                            alertOrder.show();
+                            startActivity(new Intent(v.getContext(), TradePop.class));
+                            TradePop.securitySelected = prices[cellSelected-2];
+                            TradePop.side = "sell";
+                            TradePop.price = prices[cellSelected];
                         }
                     }
                 }
@@ -449,10 +438,11 @@ public class MainActivity extends AppCompatActivity {
      */
     public static class OrderFragment extends Fragment {
 
-        static GridView pendingOrderGridView;
         static GridView pendingOrderHeaderGridView;
-        static GridView closedOrderGridView;
+        static GridView pendingOrderGridView;
         static GridView closedOrderHeaderGridView;
+        static GridView closedOrderGridView;
+        static int cellSelected;
 
         /**
          * Returns a new instance of this fragment for the given section
@@ -474,28 +464,30 @@ public class MainActivity extends AppCompatActivity {
 
             pendingOrderHeaderGridView = (GridView) view.findViewById(R.id.pendingOrderHeaderGridView);
             pendingOrderHeaderGridView.setNumColumns(PENDINGORDER_COLUMNS);
-            pendingOrderHeaderGridView.setPadding(-(width - 5 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 1), 0, 0, 0);
+            pendingOrderHeaderGridView.setPadding(-((width - 6 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 2))*2, 0, 0, 0);
             List<String> pendingOrderHeaderArray = new ArrayList<String> ();
-            pendingOrderHeaderArray.add("Id");
+            pendingOrderHeaderArray.add("OrderId");
+            pendingOrderHeaderArray.add("FixId");
             pendingOrderHeaderArray.add("Security");
             pendingOrderHeaderArray.add("Quantity");
             pendingOrderHeaderArray.add("Side");
             pendingOrderHeaderArray.add("Price");
-            pendingOrderHeaderArray.add("Status");
+            pendingOrderHeaderArray.add("Modify");
+            pendingOrderHeaderArray.add("Cancel");
             ArrayAdapter<String> pendingOrderHeaderAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridviewheader_format, pendingOrderHeaderArray);
             pendingOrderHeaderAdapter.notifyDataSetChanged();
             pendingOrderHeaderGridView.setAdapter(pendingOrderHeaderAdapter);
 
             pendingOrderGridView = (GridView) view.findViewById(R.id.pendingOrderGridView);
             pendingOrderGridView.setNumColumns(PENDINGORDER_COLUMNS);
-            pendingOrderGridView.setPadding(-(width - 5 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 1), 0, 0, 0);
+            pendingOrderGridView.setPadding(-((width - 6 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 2))*2, 0, 0, 0);
             ArrayAdapter<String> pendingOrderAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridview_format, pendingOrderArray);
             pendingOrderAdapter.notifyDataSetChanged();
             pendingOrderGridView.setAdapter(pendingOrderAdapter);
 
             closedOrderHeaderGridView = (GridView) view.findViewById(R.id.closedOrderHeaderGridView);
             closedOrderHeaderGridView.setNumColumns(CLOSEDORDER_COLUMNS);
-            closedOrderHeaderGridView.setPadding(-(width - 5 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 1), 0, 0, 0);
+            closedOrderHeaderGridView.setPadding(-(width - 6 * DEFAULT_PAD) / (CLOSEDORDER_COLUMNS - 1), 0, 0, 0);
             List<String> closedOrderHeaderArray = new ArrayList<String> ();
             closedOrderHeaderArray.add("Id");
             closedOrderHeaderArray.add("Security");
@@ -509,10 +501,33 @@ public class MainActivity extends AppCompatActivity {
 
             closedOrderGridView = (GridView) view.findViewById(R.id.closedOrderGridView);
             closedOrderGridView.setNumColumns(CLOSEDORDER_COLUMNS);
-            closedOrderGridView.setPadding(-(width - 5 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 1), 0, 0, 0);
+            closedOrderGridView.setPadding(-(width - 6 * DEFAULT_PAD) / (CLOSEDORDER_COLUMNS - 1), 0, 0, 0);
             ArrayAdapter<String> closedOrderAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridview_format, closedOrderArray);
             closedOrderAdapter.notifyDataSetChanged();
             closedOrderGridView.setAdapter(closedOrderAdapter);
+
+            pendingOrderGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
+                    cellSelected = position;
+                    System.out.println("selected " + cellSelected);
+                    if ((cellSelected % PENDINGORDER_COLUMNS) == (PENDINGORDER_COLUMNS - 2)) {
+                        System.out.println("modify " + pendingOrderArray.get(cellSelected - 5));
+                        startActivity(new Intent(v.getContext(), TradeModifyPop.class));
+                        TradeModifyPop.fixidSelected = pendingOrderArray.get(cellSelected - 5);
+                        TradeModifyPop.securitySelected = pendingOrderArray.get(cellSelected - 4);
+                        TradeModifyPop.amount = pendingOrderArray.get(cellSelected - 3);
+                        TradeModifyPop.side = pendingOrderArray.get(cellSelected - 2);
+                        TradeModifyPop.price = pendingOrderArray.get(cellSelected - 1);
+                    }
+                    if ((cellSelected % PENDINGORDER_COLUMNS) == (PENDINGORDER_COLUMNS - 1)) {
+                        System.out.println("cancel " + pendingOrderArray.get(cellSelected - 6));
+                        String alertMessage = "Cancel order?";
+                        alertOrder.setMessage(alertMessage);
+                        alertOrder.show();
+                    }
+                }
+            });
 
             return view;
         }

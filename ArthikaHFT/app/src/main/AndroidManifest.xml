@@ -25,6 +25,16 @@
             android:theme="@style/AppTheme.PopTheme">
         </activity>
 
+        <activity
+            android:name=".TradePop"
+            android:theme="@style/AppTheme.TradeTheme">
+        </activity>
+
+        <activity
+            android:name=".TradeModifyPop"
+            android:theme="@style/AppTheme.TradeTheme">
+        </activity>
+
     </application>
 
 </manifest>
