@@ -31,14 +31,14 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                 if (tick.security.equals(MainActivity.secs.get(i))){
                     if (tick.side.equals("ask")){
                         MainActivity.prices[(i+1)*MainActivity.PRICE_COLUMNS+1]=String.format("%." + tick.pips + "f", tick.price);
-                        if (tick.security.equals(PricePop.securitySelected)){
+                        if (tick.security.equals(PricePop.securitySelected) && PricePop.asklist!=null){
                             PricePop.asklist.add(tick.price);
                             PricePop.intervallist.add(MainActivity.updateTime);
                         }
                     }
                     else{
                         MainActivity.prices[(i+1)*MainActivity.PRICE_COLUMNS+2]=String.format("%." + tick.pips + "f", tick.price);
-                        if (tick.security.equals(PricePop.securitySelected)) {
+                        if (tick.security.equals(PricePop.securitySelected) && PricePop.bidlist!=null) {
                             PricePop.bidlist.add(tick.price);
                         }
                     }
@@ -161,6 +161,7 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                         MainActivity.pendingOrderArray.add(7, "Cancel");
                         System.out.println("Pending Order Added");
                     }
+                    MainActivity.pendingOrderChanged = true;
                 }
             }
             else{
@@ -170,6 +171,7 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                             for (int j = 0; j < MainActivity.PENDINGORDER_COLUMNS; j++) {
                                 MainActivity.pendingOrderArray.remove(i);
                             }
+                            MainActivity.pendingOrderChanged = true;
                             System.out.println("Pending Order Deleted");
                         }
                     }
@@ -181,7 +183,12 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                             MainActivity.closedOrderArray.set(i + 1, tick.security);
                             MainActivity.closedOrderArray.set(i + 2, String.valueOf(tick.quantity));
                             MainActivity.closedOrderArray.set(i + 3, tick.side);
-                            MainActivity.closedOrderArray.set(i + 4, String.format("%." + tick.pips + "f", tick.priceatstart));
+                            if (tick.limitprice<=0){
+                                MainActivity.closedOrderArray.set(i + 4, String.format("%." + tick.pips + "f", tick.priceatstart));
+                            }
+                            else {
+                                MainActivity.closedOrderArray.set(i + 4, String.format("%." + tick.pips + "f", tick.limitprice));
+                            }
                             MainActivity.closedOrderArray.set(i + 5, tick.status);
                             System.out.println("Order Modified");
                             found = true;
@@ -193,10 +200,16 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                         MainActivity.closedOrderArray.add(1, tick.security);
                         MainActivity.closedOrderArray.add(2, String.valueOf(tick.quantity));
                         MainActivity.closedOrderArray.add(3, tick.side);
-                        MainActivity.closedOrderArray.add(4, String.format("%." + tick.pips + "f", tick.priceatstart));
+                        if (tick.limitprice<=0) {
+                            MainActivity.closedOrderArray.add(4, String.format("%." + tick.pips + "f", tick.priceatstart));
+                        }
+                        else{
+                            MainActivity.closedOrderArray.add(4, String.format("%." + tick.pips + "f", tick.limitprice));
+                        }
                         MainActivity.closedOrderArray.add(5, tick.status);
                         System.out.println("Order Added");
                     }
+                    MainActivity.closedOrderChanged = true;
                 }
             }
         }

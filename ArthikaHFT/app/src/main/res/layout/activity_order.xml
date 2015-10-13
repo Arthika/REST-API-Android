@@ -48,7 +48,8 @@
             android:paddingStart="0dp"
             android:verticalSpacing="0dp"
             android:horizontalSpacing="0dp"
-            android:gravity="fill_horizontal" />
+            android:gravity="fill_horizontal"
+            android:fastScrollAlwaysVisible="false" />
 
         <GridView
             android:layout_width="match_parent"
@@ -68,7 +69,10 @@
             android:verticalSpacing="0dp"
             android:horizontalSpacing="0dp"
             android:gravity="fill_horizontal"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.5"
+            android:nestedScrollingEnabled="false"
+            android:fastScrollEnabled="false"
+            android:fastScrollAlwaysVisible="false" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -86,7 +90,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/closedOrderGridView"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.5"
+            android:nestedScrollingEnabled="false"
+            android:fastScrollAlwaysVisible="false"
+            android:fastScrollEnabled="false" />
 
     </LinearLayout>
 

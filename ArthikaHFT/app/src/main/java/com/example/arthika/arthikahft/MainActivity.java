@@ -55,10 +55,15 @@ public class MainActivity extends AppCompatActivity {
 
     static ArthikaHFT wrapper;
     private static String domain;
+    private static String url_stream;
+    private static String url_polling;
+    private static String url_challenge;
+    private static String url_token;
     private static String user;
     private static String password;
     private static String authentication_port;
     private static String request_port;
+
     static int width;
     static boolean started;
     static long priceStreamingId;
@@ -78,6 +83,8 @@ public class MainActivity extends AppCompatActivity {
     static List<String> closedOrderArray;
     static List<String> positionArray;
     static List<String> assetArray;
+    static boolean pendingOrderChanged;
+    static boolean closedOrderChanged;
 
     public static final int DEFAULT_PAD = 16;
     public static final int PRICE_COLUMNS = 3;
@@ -85,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int CLOSEDORDER_COLUMNS = 6;
     public static final int POSITION_COLUMNS = 4;
     public static final int ASSET_COLUMNS = 2;
+    public static final int MAX_CLOSED_ORDERS = 20;
     private static final int REFRESH_TIME = 500;
 
     @Override
@@ -107,14 +115,14 @@ public class MainActivity extends AppCompatActivity {
         // get properties from file
         getProperties();
 
-        wrapper = new ArthikaHFT(domain, user, password, authentication_port, request_port);
+        wrapper = new ArthikaHFT(domain, url_stream, url_polling, url_challenge, url_token, user, password, authentication_port, request_port);
         wrapper.doAuthentication();
 
         started = false;
 
         updateTime = "";
 
-        secs = Arrays.asList("EUR_USD", "EUR_GBP", "EUR_JPY", "GBP_JPY", "GBP_USD", "USD_JPY", "AUD_USD", "USD_CAD");
+        secs = Arrays.asList("EUR_USD", "EUR_GBP", "GBP_USD", "AUD_USD", "USD_CAD");
         prices = new String[PRICE_COLUMNS * (secs.size() + 1)];
         prices[0] = "SECURITY";
         prices[1] = "ASK";
@@ -126,8 +134,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         amountlist = new String[]{"100000", "200000", "500000", "1000000"};
-        typelist = new String[]{"market","limit"};
-        validitylist = new String[]{"day", "good till cancel", "inmediate or cancel", "fill or kill", "date", "good for secs", "good for msecs"};
+        typelist = new String[]{"market", "limit"};
+        validitylist = new String[]{"day", "good till cancel", "inmediate or cancel", "fill or kill"};
         TIlist = new String[]{"Baxter_CNX", "Cantor_CNX_3"};
 
         pendingOrderArray = new ArrayList<String> ();
@@ -181,13 +189,18 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void getProperties(){
+    public static void getProperties(){
+        /*
         Properties prop = new Properties();
         InputStream input = null;
         try {
-            input = getAssets().open("config.properties");
+            input = new FileInputStream("config.properties");
             prop.load(input);
             domain = prop.getProperty("domain");
+            url_stream = prop.getProperty("url-stream");
+            url_polling = prop.getProperty("url-polling");
+            url_challenge = prop.getProperty("url-challenge");
+            url_token = prop.getProperty("url-token");
             user = prop.getProperty("user");
             password = prop.getProperty("password");
             authentication_port = prop.getProperty("authentication-port");
@@ -206,6 +219,16 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+        */
+        domain="http://demo.arthikatrading.com";
+        user="fedenice";
+        password="fedenice";
+        authentication_port="81";
+        request_port="81";
+        url_stream="/cgi-bin/IHFTRestStreamer";
+        url_polling="/fcgi-bin/IHFTRestAPI";
+        url_challenge="/fcgi-bin/IHFTRestAuth/getAuthorizationChallenge";
+        url_token="/fcgi-bin/IHFTRestAuth/getAuthorizationToken";
     }
 
     private void cancelOrder() {
@@ -262,27 +285,38 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     if (OrderFragment.pendingOrderGridView!=null) {
-                        synchronized(pendingOrderArray) {
-                            ArrayAdapter pendingOrderAdapter = (ArrayAdapter) OrderFragment.pendingOrderGridView.getAdapter();
-                            pendingOrderAdapter.notifyDataSetChanged();
-                            OrderFragment.pendingOrderGridView.setAdapter(pendingOrderAdapter);
+                        if (pendingOrderChanged) {
+                            pendingOrderChanged = false;
+                            synchronized (pendingOrderArray) {
+                                ArrayAdapter pendingOrderAdapter = (ArrayAdapter) OrderFragment.pendingOrderGridView.getAdapter();
+                                pendingOrderAdapter.notifyDataSetChanged();
+                                OrderFragment.pendingOrderGridView.setAdapter(pendingOrderAdapter);
+                            }
                         }
 
-                        synchronized(closedOrderArray) {
-                            ArrayAdapter closedOrderAdapter = (ArrayAdapter) OrderFragment.closedOrderGridView.getAdapter();
-                            closedOrderAdapter.notifyDataSetChanged();
-                            OrderFragment.closedOrderGridView.setAdapter(closedOrderAdapter);
+                        if (closedOrderChanged) {
+                            closedOrderChanged = false;
+                            synchronized (closedOrderArray) {
+                                if (closedOrderArray.size() > MAX_CLOSED_ORDERS * CLOSEDORDER_COLUMNS) {
+                                    for (int j = 0; j < CLOSEDORDER_COLUMNS; j++) {
+                                        closedOrderArray.remove(closedOrderArray.size() - 1);
+                                    }
+                                }
+                                ArrayAdapter closedOrderAdapter = (ArrayAdapter) OrderFragment.closedOrderGridView.getAdapter();
+                                closedOrderAdapter.notifyDataSetChanged();
+                                OrderFragment.closedOrderGridView.setAdapter(closedOrderAdapter);
+                            }
                         }
                     }
 
                     if (PositionFragment.positionGridView!=null) {
-                        synchronized(positionArray) {
+                        synchronized (positionArray) {
                             ArrayAdapter positionAdapter = (ArrayAdapter) PositionFragment.positionGridView.getAdapter();
                             positionAdapter.notifyDataSetChanged();
                             PositionFragment.positionGridView.setAdapter(positionAdapter);
                         }
 
-                        synchronized(assetArray) {
+                        synchronized (assetArray) {
                             ArrayAdapter assetAdapter = (ArrayAdapter) PositionFragment.assetGridView.getAdapter();
                             assetAdapter.notifyDataSetChanged();
                             PositionFragment.assetGridView.setAdapter(assetAdapter);

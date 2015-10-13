@@ -41,15 +41,17 @@ interface ArthikaHFTPriceListener {
 public class ArthikaHFT {
 
     private String domain;
+    private String url_stream;
+    private String url_polling;
+    private String url_challenge;
+    private String url_token;
     private String user;
     private String password;
     private String authentication_port;
     private String request_port;
+    private String challenge;
     private String token = null;
     private HashMap<ThreadExecution,myResponseHandler> threadmap;
-
-    private final static String STREAMINGURL = "cgi-bin/IHFTRestStreamer/";
-    private final static String POLLINGURL = "fcgi-bin/IHFTRestAPI/";
 
     public static class hftRequest {
         public getPriceRequest     getPrice;
@@ -522,8 +524,12 @@ public class ArthikaHFT {
 
     }
 
-    public ArthikaHFT(String domain, String user, String password, String authentication_port, String request_port){
+    public ArthikaHFT(String domain, String url_stream, String url_polling, String url_challenge, String url_token, String user, String password, String authentication_port, String request_port){
         this.domain = domain;
+        this.url_stream = url_stream;
+        this.url_polling = url_polling;
+        this.url_challenge = url_challenge;
+        this.url_token = url_token;
         this.user = user;
         this.password = password;
         this.authentication_port = authentication_port;
@@ -544,7 +550,7 @@ public class ArthikaHFT {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getPrice = new getPriceRequest(user, token, securities, tinterfaces, granularity, levels);
         myResponseHandler responseHandler = new myResponseHandler();
-        sendRequest(hftrequest, responseHandler, "getPrice", false, null);
+        sendRequest(hftrequest, responseHandler, "/getPrice", false, null);
         return responseHandler.getPriceTickList();
     }
 
@@ -552,7 +558,7 @@ public class ArthikaHFT {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getPrice = new getPriceRequest(user, token, securities, tinterfaces, granularity, levels);
         myResponseHandler responseHandler = new myResponseHandler();
-        return sendRequest(hftrequest, responseHandler, "getPrice", true, listener);
+        return sendRequest(hftrequest, responseHandler, "/getPrice", true, listener);
     }
 
     public boolean getPriceEnd(long threadid) throws IOException {
@@ -563,7 +569,7 @@ public class ArthikaHFT {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getPosition = new getPositionRequest(user, token, assets, securities, accounts);
         myResponseHandler responseHandler = new myResponseHandler();
-        sendRequest(hftrequest, responseHandler, "getPosition", false, null);
+        sendRequest(hftrequest, responseHandler, "/getPosition", false, null);
         positionTick positiontick = new positionTick();
         positiontick.assetPositionTickList = responseHandler.assetPositionTickList;
         positiontick.securityPositionTickList = responseHandler.securityPositionTickList;
@@ -574,7 +580,7 @@ public class ArthikaHFT {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getPosition = new getPositionRequest(user, token, assets, securities, accounts);
         myResponseHandler responseHandler = new myResponseHandler();
-        return sendRequest(hftrequest, responseHandler, "getPosition", true, listener);
+        return sendRequest(hftrequest, responseHandler, "/getPosition", true, listener);
 
     }
 
@@ -586,7 +592,7 @@ public class ArthikaHFT {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getOrder = new getOrderRequest(user, token, securities, tinterfaces, types);
         myResponseHandler responseHandler = new myResponseHandler();
-        sendRequest(hftrequest, responseHandler, "getOrder", false, null);
+        sendRequest(hftrequest, responseHandler, "/getOrder", false, null);
         return responseHandler.getOrderTickList();
     }
 
@@ -594,7 +600,7 @@ public class ArthikaHFT {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getOrder = new getOrderRequest(user, token, securities, tinterfaces, types);
         myResponseHandler responseHandler = new myResponseHandler();
-        return sendRequest(hftrequest, responseHandler, "getOrder", true, listener);
+        return sendRequest(hftrequest, responseHandler, "/getOrder", true, listener);
     }
 
     public boolean getOrderEnd(long threadid) throws IOException {
@@ -605,7 +611,7 @@ public class ArthikaHFT {
         hftRequest hftrequest = new hftRequest();
         hftrequest.setOrder = new setOrderRequest(user, token, orders);
         myResponseHandler responseHandler = new myResponseHandler();
-        sendRequest(hftrequest, responseHandler, "setOrder", false, null);
+        sendRequest(hftrequest, responseHandler, "/setOrder", false, null);
         return responseHandler.getOrderList();
     }
 
@@ -613,7 +619,7 @@ public class ArthikaHFT {
         hftRequest hftrequest = new hftRequest();
         hftrequest.cancelOrder = new cancelOrderRequest(user, token, orders);
         myResponseHandler responseHandler = new myResponseHandler();
-        sendRequest(hftrequest, responseHandler, "cancelOrder", false, null);
+        sendRequest(hftrequest, responseHandler, "/cancelOrder", false, null);
         return responseHandler.getCancelList();
     }
 
@@ -621,7 +627,7 @@ public class ArthikaHFT {
         hftRequest hftrequest = new hftRequest();
         hftrequest.modifyOrder = new modifyOrderRequest(user, token, orders);
         myResponseHandler responseHandler = new myResponseHandler();
-        sendRequest(hftrequest, responseHandler, "modifyOrder", false, null);
+        sendRequest(hftrequest, responseHandler, "/modifyOrder", false, null);
         return responseHandler.getModifyList();
     }
 
@@ -645,7 +651,7 @@ public class ArthikaHFT {
         responseHandler.setStream(stream);
         HttpPost httpRequest;
         if (stream){
-            httpRequest = new HttpPost(domain + ":" + request_port + "/" + STREAMINGURL + urlpath);
+            httpRequest = new HttpPost(domain + ":" + request_port + "/" + url_stream + urlpath);
             httpRequest.setEntity(request);
             responseHandler.listener = listener;
             ThreadExecution T = new ThreadExecution(client, httpRequest, responseHandler);
@@ -656,7 +662,7 @@ public class ArthikaHFT {
             return T.getId();
         }
         else{
-            httpRequest = new HttpPost(domain + ":" + request_port + "/" + POLLINGURL + urlpath);
+            httpRequest = new HttpPost(domain + ":" + request_port + "/" + url_polling + urlpath);
             httpRequest.setEntity(request);
             client.execute(httpRequest, responseHandler);
         }

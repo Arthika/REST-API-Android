@@ -54,7 +54,8 @@
             android:paddingStart="0dp"
             android:verticalSpacing="0dp"
             android:horizontalSpacing="0dp"
-            android:gravity="fill_horizontal" />
+            android:gravity="fill_horizontal"
+            android:nestedScrollingEnabled="true" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -72,7 +73,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/assetGridView"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.5"
+            android:nestedScrollingEnabled="true" />
 
     </LinearLayout>
 
