@@ -15,7 +15,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Locale;
 
 
 /**
@@ -27,7 +30,7 @@ public class TradeModifyPop extends Activity {
     public static String fixidSelected;
     public static String side;
     public static String price;
-    public static String amount;
+    public static int amount;
     static Spinner tradeModifyAmountSpinner;
     static EditText tradeModifyPriceEditText;
 
@@ -46,7 +49,7 @@ public class TradeModifyPop extends Activity {
         TextView tradeModifySecTextView = (TextView) this.findViewById(R.id.tradeModifySecTextView);
         tradeModifySecTextView.setText(side.toUpperCase() + " " + securitySelected);
 
-        ArrayAdapter<String> tradeModifyAmountAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.amountlist);
+        ArrayAdapter<Integer> tradeModifyAmountAdapter = new ArrayAdapter<Integer>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.amountlist);
         tradeModifyAmountSpinner = (Spinner) this.findViewById(R.id.tradeModifyAmountSpinner);
         tradeModifyAmountSpinner.setAdapter(tradeModifyAmountAdapter);
         int spinnerPosition = tradeModifyAmountAdapter.getPosition(amount);
@@ -56,7 +59,7 @@ public class TradeModifyPop extends Activity {
         tradeModifyAmountSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-                amount = tradeModifyAmountSpinner.getSelectedItem().toString();
+                amount = (int) tradeModifyAmountSpinner.getSelectedItem();
                 refresh();
             }
 
@@ -126,7 +129,12 @@ public class TradeModifyPop extends Activity {
         ArthikaHFT.modOrder order = new ArthikaHFT.modOrder();
         order.fixid = fixidSelected;
         order.quantity = Integer.valueOf(amount);
-        order.price = Double.parseDouble(tradeModifyPriceEditText.getText().toString());
+        try {
+            NumberFormat format = NumberFormat.getInstance(Locale.getDefault());
+            order.price = format.parse(tradeModifyPriceEditText.getText().toString()).doubleValue();
+        } catch (ParseException e) {
+            order.price = Double.parseDouble(tradeModifyPriceEditText.getText().toString());
+        }
         try {
             MainActivity.wrapper.modifyOrder(Arrays.asList(order));
             finish();

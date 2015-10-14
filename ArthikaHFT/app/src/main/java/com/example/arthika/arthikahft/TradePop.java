@@ -15,7 +15,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Locale;
 
 
 /**
@@ -26,7 +29,7 @@ public class TradePop extends Activity {
     public static String securitySelected;
     public static String side;
     public static String price;
-    public static String amount;
+    public static int amount;
     public static String ti;
     static Spinner tradeAmountSpinner;
     static Spinner tradeTypeSpinner;
@@ -50,13 +53,13 @@ public class TradePop extends Activity {
         TextView tradeSecTextView = (TextView) this.findViewById(R.id.tradeSecTextView);
         tradeSecTextView.setText(side.toUpperCase() + " " + securitySelected);
 
-        ArrayAdapter<String> tradeAmountAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.amountlist);
+        ArrayAdapter<Integer> tradeAmountAdapter = new ArrayAdapter<Integer>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.amountlist);
         tradeAmountSpinner = (Spinner) this.findViewById(R.id.tradeAmountSpinner);
         tradeAmountSpinner.setAdapter(tradeAmountAdapter);
         tradeAmountSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-                amount = tradeAmountSpinner.getSelectedItem().toString();
+                amount = (int) tradeAmountSpinner.getSelectedItem();
                 refresh();
             }
 
@@ -174,7 +177,12 @@ public class TradePop extends Activity {
         order.type = type;
         if (!order.type.equals("market")){
             order.timeinforce = tradeValiditySpinner.getSelectedItem().toString();
-            order.price = Double.parseDouble(tradePriceEditText.getText().toString());
+            try {
+                NumberFormat format = NumberFormat.getInstance(Locale.getDefault());
+                order.price = format.parse(tradePriceEditText.getText().toString()).doubleValue();
+            } catch (ParseException e) {
+                order.price = Double.parseDouble(tradePriceEditText.getText().toString());
+            }
         }
         try {
             MainActivity.wrapper.setOrder(Arrays.asList(order));

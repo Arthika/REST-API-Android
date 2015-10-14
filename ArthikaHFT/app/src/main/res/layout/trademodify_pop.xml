@@ -25,7 +25,6 @@
             android:layout_width="175dp"
             android:layout_height="wrap_content"
             android:id="@+id/tradeModifyAmountSpinner"
-            android:clickable="false"
             android:layout_weight="0.5" />
     </LinearLayout>
 

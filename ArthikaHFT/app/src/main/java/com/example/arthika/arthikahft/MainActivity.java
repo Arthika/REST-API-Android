@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
     static long positionStreamingId;
     static String[] prices;
     static List<String> secs;
-    static String[] amountlist;
+    static Integer[] amountlist;
     static String[] typelist;
     static String[] validitylist;
     static String[] TIlist;
@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
             prices[(i + 1) * PRICE_COLUMNS + 2] = "0";
         }
 
-        amountlist = new String[]{"100000", "200000", "500000", "1000000"};
+        amountlist = new Integer[]{100000, 200000, 500000, 1000000};
         typelist = new String[]{"market", "limit"};
         validitylist = new String[]{"day", "good till cancel", "inmediate or cancel", "fill or kill"};
         TIlist = new String[]{"Baxter_CNX", "Cantor_CNX_3"};
@@ -583,7 +583,7 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(new Intent(v.getContext(), TradeModifyPop.class));
                         TradeModifyPop.fixidSelected = pendingOrderArray.get(cellSelected - 5);
                         TradeModifyPop.securitySelected = pendingOrderArray.get(cellSelected - 4);
-                        TradeModifyPop.amount = pendingOrderArray.get(cellSelected - 3);
+                        TradeModifyPop.amount = Integer.parseInt(pendingOrderArray.get(cellSelected - 3));
                         TradeModifyPop.side = pendingOrderArray.get(cellSelected - 2);
                         TradeModifyPop.price = pendingOrderArray.get(cellSelected - 1);
                     }
