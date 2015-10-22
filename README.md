@@ -1,5 +1,6 @@
 # REST API Android
 ##### Table of Contents 
+
 [Overview](#Overview) 
 
 [Requirements](#requirements) 
@@ -9,7 +10,7 @@
 <a name="Overview"/>
 ## Overview:
 <a name="Requirements"/>
-[Sample App screenshot preview](Android-Sample-App.png)
+![Sample App screenshot preview](Android-Sample-App.png)
 
 <a name="Requirements"/>
 ## Requirements:
