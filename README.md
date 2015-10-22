@@ -1,11 +1,10 @@
 # REST API Android
 ##### Table of Contents 
 
-[Overview](#Overview) 
+[Overview](#Overview)   
 
-[Requirements](#requirements) 
-
-[Instructions](#Instructions) 
+[Requirements](#requirements)   
+[Instructions](#Instructions)   
 
 <a name="Overview"/>
 ## Overview:
