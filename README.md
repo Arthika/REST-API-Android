@@ -1,10 +1,19 @@
 # REST API Android
+##### Table of Contents
+[Overview](#Overview)
+[Requirements](#requirements)
+[Instructions](#Instructions)
 
+<a name="Overview"/>
+## Overview:
+!<a name="Requirements"/>[Sample App screenshot preview](Android-Sample-App.png)
 
+<a name="Requirements"/>
 ## Requirements:
 You will need Android Studio at least 1.3.2 version, you can download these from
 [Android Studio Download page](https://developer.android.com/sdk/index.html)
 
+<a name="Instructions"/>
 ## Instructions:
 
 ### 1) Pull repository contents.
@@ -49,4 +58,4 @@ Copy generated apk file to your mobile device, you can use a USB cable.
 In your mobile device, execute this file for installing the app.
 
 
-![Sample App screenshot preview](Android-Sample-App.png)
+
