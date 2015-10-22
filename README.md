@@ -1,9 +1,9 @@
 # REST API Android
+This is Arthika's sample App for Android. It demonstrates the use of the REST API.
 ##### Table of Contents 
 
 [Overview](#Overview)   
-
-[Requirements](#requirements)   
+[Requirements](#Requirements)   
 [Instructions](#Instructions)   
 
 <a name="Overview"/>
