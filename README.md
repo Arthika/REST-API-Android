@@ -8,7 +8,8 @@
 
 <a name="Overview"/>
 ## Overview:
-!<a name="Requirements"/>[Sample App screenshot preview](Android-Sample-App.png)
+<a name="Requirements"/>
+[Sample App screenshot preview](Android-Sample-App.png)
 
 <a name="Requirements"/>
 ## Requirements:
