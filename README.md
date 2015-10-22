@@ -7,27 +7,27 @@ This sample App for Android demonstrates the use of Arthika's REST API.
 [Instructions](#Instructions)   
 
 <a name="Screenshots"/>
-## Screenshots:
+### Screenshots:
 ![Sample App screenshot preview](Android-Sample-App.png)
 
 <a name="Requirements"/>
-## Requirements:
+### Requirements:
 You will need Android Studio at least 1.3.2 version, you can download these from
 [Android Studio Download page](https://developer.android.com/sdk/index.html)
 
 <a name="Instructions"/>
-## Instructions:
+### Instructions:
 
-### 1) Pull repository contents.
+##### 1) Pull repository contents.
 
-### 2) Open the project in Android Studio
+##### 2) Open the project in Android Studio
 You have two options:
 
 2.a) Open the project into Android Studio (File -> Open -> Select ArthikaHFT folder)
 
 2.b) Select "Open an existing Android Studio Project" in Android Studio launcher menu, then select ArthikaHFT folder.
 
-### 3) Run in Android Studio Emulator
+#### 3) Run in Android Studio Emulator
 
 Select Run -> Run 'app'.
 
