@@ -8,8 +8,9 @@ This sample App for Android demonstrates the use of Arthika's REST API.
 
 <a name="Screenshots"/>
 ### Screenshots:
-![Sample App screenshot preview](Images/Android-Sample-App.png)
-
+![Sample App screenshot preview](Images/Android-Sample-App-0.png)
+![Sample App screenshot preview](Images/Android-Sample-App-1.png)
+![Sample App screenshot preview](Images/Android-Sample-App-2.png)
 <a name="Requirements"/>
 ### Requirements:
 You will need Android Studio at least 1.3.2 version, you can download these from
