@@ -8,7 +8,7 @@ This sample App for Android demonstrates the use of Arthika's REST API.
 
 <a name="Screenshots"/>
 ### Screenshots:
-![Sample App screenshot preview](Android-Sample-App.png)
+![Sample App screenshot preview](Images/Android-Sample-App.png)
 
 <a name="Requirements"/>
 ### Requirements:
