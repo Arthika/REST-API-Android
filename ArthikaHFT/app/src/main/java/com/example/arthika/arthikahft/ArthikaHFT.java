@@ -1,5 +1,8 @@
 package com.example.arthika.arthikahft;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.ConnectionClosedException;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -15,7 +18,6 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import java.io.BufferedReader;
@@ -31,6 +33,7 @@ interface ArthikaHFTPriceListener {
     void heartbeatEvent();
     void messageEvent(String message);
     void priceEvent(List<ArthikaHFT.priceTick> priceTickList);
+    void accountingEvent(ArthikaHFT.accountingTick accountingTick);
     void assetPositionEvent(List<ArthikaHFT.assetPositionTick> assetPositionTickList);
     void securityPositionEvent(List<ArthikaHFT.securityPositionTick> securityPositionTickList);
     void positionHeartbeatEvent(ArthikaHFT.positionHeartbeat positionHeartbeat);
@@ -49,11 +52,14 @@ public class ArthikaHFT {
     private String password;
     private String authentication_port;
     private String request_port;
-    private String challenge;
+    public String challenge;
     private String token = null;
+    private static int interval;
     private HashMap<ThreadExecution,myResponseHandler> threadmap;
 
     public static class hftRequest {
+        public getAuthorizationChallengeRequest getAuthorizationChallenge;
+        public getAuthorizationTokenRequest     getAuthorizationToken;
         public getPriceRequest     getPrice;
         public getPositionRequest  getPosition;
         public getOrderRequest     getOrder;
@@ -66,12 +72,42 @@ public class ArthikaHFT {
     }
 
     public static class hftResponse {
+        public getAuthorizationChallengeResponse getAuthorizationChallengeResponse;
+        public getAuthorizationTokenResponse     getAuthorizationTokenResponse;
         public getPriceResponse    getPriceResponse;
         public getPositionResponse getPositionResponse;
         public getOrderResponse    getOrderResponse;
         public setOrderResponse    setOrderResponse;
         public cancelOrderResponse cancelOrderResponse;
         public modifyOrderResponse modifyOrderResponse;
+    }
+
+    public static class getAuthorizationChallengeRequest {
+        public String        user;
+
+        public getAuthorizationChallengeRequest( String user ) {
+            this.user = user;
+        }
+    }
+
+    public static class getAuthorizationChallengeResponse {
+        public String        challenge;
+        public String        timestamp;
+    }
+
+    public static class getAuthorizationTokenRequest {
+        public String        user;
+        public String        challengeresp;
+
+        public getAuthorizationTokenRequest( String user, String challengeresp ) {
+            this.user = user;
+            this.challengeresp = challengeresp;
+        }
+    }
+
+    public static class getAuthorizationTokenResponse {
+        public String        token;
+        public String        timestamp;
     }
 
     public static class getPriceRequest {
@@ -81,14 +117,16 @@ public class ArthikaHFT {
         public List<String>  tinterface;
         public String        granularity;
         public int           levels;
+        public int           interval;
 
-        public getPriceRequest( String user, String token, List<String> security, List<String> tinterface, String granularity, int levels ) {
+        public getPriceRequest( String user, String token, List<String> security, List<String> tinterface, String granularity, int levels, int interval ) {
             this.user = user;
             this.token = token;
             this.security = security;
             this.tinterface = tinterface;
             this.granularity = granularity;
             this.levels = levels;
+            this.interval = interval;
         }
     }
 
@@ -106,13 +144,15 @@ public class ArthikaHFT {
         public List<String>  asset;
         public List<String>  security;
         public List<String>  account;
+        public int           interval;
 
-        public getPositionRequest( String user, String token, List<String> asset, List<String> security, List<String> account ) {
+        public getPositionRequest( String user, String token, List<String> asset, List<String> security, List<String> account, int interval ) {
             this.user = user;
             this.token = token;
             this.asset = asset;
             this.security = security;
             this.account = account;
+            this.interval = interval;
         }
     }
 
@@ -121,6 +161,7 @@ public class ArthikaHFT {
         public String           message;
         public List<assetPositionTick>  assetposition;
         public List<securityPositionTick>  securityposition;
+        public accountingTick   accounting;
         public positionHeartbeat  heartbeat;
         public String           timestamp;
     }
@@ -131,13 +172,15 @@ public class ArthikaHFT {
         public List<String>  security;
         public List<String>  tinterface;
         public List<String>  type;
+        public int           interval;
 
-        public getOrderRequest( String user, String token, List<String> security, List<String> tinterface, List<String> type ) {
+        public getOrderRequest( String user, String token, List<String> security, List<String> tinterface, List<String> type, int interval ) {
             this.user = user;
             this.token = token;
             this.security = security;
             this.tinterface = tinterface;
             this.type = type;
+            this.interval = interval;
         }
     }
 
@@ -223,9 +266,7 @@ public class ArthikaHFT {
         public String  account;
         public String  asset;
         public double  exposure;
-        public double  equity;
-        public double  totalexposure;
-        public double  freemargin;
+        public double  totalrisk;
     }
 
     public static class securityPositionTick {
@@ -235,7 +276,12 @@ public class ArthikaHFT {
         public String  side;
         public double  price;
         public int     pips;
-        public double  equity;
+    }
+
+    public static class accountingTick {
+        public double  strategyPL;
+        public double  totalequity;
+        public double  usedmargin;
         public double  freemargin;
     }
 
@@ -317,6 +363,7 @@ public class ArthikaHFT {
         private ObjectMapper mapper;
         private boolean stream = true;
         private List<priceTick> priceTickList = new ArrayList<priceTick>();
+        private accountingTick accountingTick = new accountingTick();
         private List<assetPositionTick> assetPositionTickList = new ArrayList<assetPositionTick>();
         private List<securityPositionTick> securityPositionTickList = new ArrayList<securityPositionTick>();
         private List<orderRequest> orderList = new ArrayList<orderRequest>();
@@ -388,6 +435,15 @@ public class ArthikaHFT {
                             throw ex;
                         }
 
+                        if (response.getAuthorizationChallengeResponse != null){
+                            challenge = response.getAuthorizationChallengeResponse.challenge;
+                            return null;
+                        }
+                        if (response.getAuthorizationTokenResponse != null){
+                            token = response.getAuthorizationTokenResponse.token;
+                            return null;
+                        }
+
                         if (response.getPriceResponse!=null){
                             if(this.stream){
                                 if (response.getPriceResponse.timestamp != null){
@@ -416,6 +472,9 @@ public class ArthikaHFT {
                                 if (response.getPositionResponse.timestamp != null){
                                     listener.timestampEvent(response.getPositionResponse.timestamp);
                                 }
+                                if (response.getPositionResponse.accounting!= null){
+                                    listener.accountingEvent(response.getPositionResponse.accounting);
+                                }
                                 if (response.getPositionResponse.assetposition!= null){
                                     listener.assetPositionEvent(response.getPositionResponse.assetposition);
                                 }
@@ -430,6 +489,9 @@ public class ArthikaHFT {
                                 }
                             }
                             else{
+                                if (response.getPositionResponse.accounting != null){
+                                    accountingTick = response.getPositionResponse.accounting;
+                                }
                                 if (response.getPositionResponse.assetposition != null){
                                     for (assetPositionTick tick : response.getPositionResponse.assetposition){
                                         assetPositionTickList.add(tick);
@@ -525,6 +587,7 @@ public class ArthikaHFT {
     }
 
     public ArthikaHFT(String domain, String url_stream, String url_polling, String url_challenge, String url_token, String user, String password, String authentication_port, String request_port){
+        this.token = null;
         this.domain = domain;
         this.url_stream = url_stream;
         this.url_polling = url_polling;
@@ -541,22 +604,72 @@ public class ArthikaHFT {
         threadmap = new HashMap<ThreadExecution,myResponseHandler>();
     }
 
-    public void doAuthentication(){
-        // TODO generate token
-        this.token = this.password;
+    public void doAuthentication() throws IOException, InterruptedException, DecoderException {
+        myResponseHandler responseHandler = new myResponseHandler();
+        final ObjectMapper mapper = new ObjectMapper();
+        List<Header> headers = new ArrayList<Header>();
+        headers.add(new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"));
+        headers.add(new BasicHeader(HttpHeaders.ACCEPT, "application/json"));
+        CloseableHttpClient client = HttpClients.custom().setDefaultHeaders(headers).build();
+
+        try{
+            hftRequest hftrequest;
+            StringEntity request;
+            HttpPost httpRequest;
+
+            // get challenge
+            hftrequest = new hftRequest();
+            hftrequest.getAuthorizationChallenge = new getAuthorizationChallengeRequest(user);
+            mapper.setSerializationInclusion(Inclusion.NON_NULL);
+            mapper.configure(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+            request = new StringEntity(mapper.writeValueAsString(hftrequest));
+            System.out.println(mapper.writeValueAsString(hftrequest));
+            responseHandler.setObjectMapper(mapper);
+            responseHandler.setStream(false);
+            httpRequest = new HttpPost(domain + ":" + authentication_port + url_challenge);
+            httpRequest.setEntity(request);
+            client.execute(httpRequest, responseHandler);
+
+            // create challenge response
+            byte[] a = Hex.decodeHex(challenge.toCharArray());
+            byte[] b = password.getBytes();
+            byte[] c = new byte[a.length + b.length];
+            System.arraycopy(a, 0, c, 0, a.length);
+            System.arraycopy(b, 0, c, a.length, b.length);
+            byte[] d = DigestUtils.sha1(c);
+            String challengeresp = String.valueOf(Hex.encodeHex(d));
+
+            // get token with challenge response
+            hftrequest = new hftRequest();
+            hftrequest.getAuthorizationToken = new getAuthorizationTokenRequest(user, challengeresp);
+            mapper.setSerializationInclusion(Inclusion.NON_NULL);
+            mapper.configure(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+            request = new StringEntity(mapper.writeValueAsString(hftrequest));
+            System.out.println(mapper.writeValueAsString(hftrequest));
+            responseHandler.setObjectMapper(mapper);
+            responseHandler.setStream(false);
+            httpRequest = new HttpPost(domain + ":" + authentication_port + url_token);
+            httpRequest.setEntity(request);
+            client.execute(httpRequest, responseHandler);
+        } finally {
+            synchronized (this) {
+                this.notify();
+            }
+            client.close();
+        }
     }
 
     public List<priceTick> getPrice(List<String> securities, List<String> tinterfaces, String granularity, int levels) throws IOException, InterruptedException {
         hftRequest hftrequest = new hftRequest();
-        hftrequest.getPrice = new getPriceRequest(user, token, securities, tinterfaces, granularity, levels);
+        hftrequest.getPrice = new getPriceRequest(user, token, securities, tinterfaces, granularity, levels, 0);
         myResponseHandler responseHandler = new myResponseHandler();
         sendRequest(hftrequest, responseHandler, "/getPrice", false, null);
         return responseHandler.getPriceTickList();
     }
 
-    public long getPriceBegin(List<String> securities, List<String> tinterfaces, String granularity, int levels, ArthikaHFTPriceListener listener ) throws IOException, InterruptedException {
+    public long getPriceBegin(List<String> securities, List<String> tinterfaces, String granularity, int levels, int interval, ArthikaHFTPriceListener listener ) throws IOException, InterruptedException {
         hftRequest hftrequest = new hftRequest();
-        hftrequest.getPrice = new getPriceRequest(user, token, securities, tinterfaces, granularity, levels);
+        hftrequest.getPrice = new getPriceRequest(user, token, securities, tinterfaces, granularity, levels, interval);
         myResponseHandler responseHandler = new myResponseHandler();
         return sendRequest(hftrequest, responseHandler, "/getPrice", true, listener);
     }
@@ -567,7 +680,7 @@ public class ArthikaHFT {
 
     public positionTick getPosition(List<String> assets, List<String> securities, List<String> accounts) throws IOException, InterruptedException {
         hftRequest hftrequest = new hftRequest();
-        hftrequest.getPosition = new getPositionRequest(user, token, assets, securities, accounts);
+        hftrequest.getPosition = new getPositionRequest(user, token, assets, securities, accounts, 0);
         myResponseHandler responseHandler = new myResponseHandler();
         sendRequest(hftrequest, responseHandler, "/getPosition", false, null);
         positionTick positiontick = new positionTick();
@@ -576,9 +689,9 @@ public class ArthikaHFT {
         return positiontick;
     }
 
-    public long getPositionBegin(List<String> assets, List<String> securities, List<String> accounts, ArthikaHFTPriceListener listener ) throws IOException, InterruptedException {
+    public long getPositionBegin(List<String> assets, List<String> securities, List<String> accounts, int interval, ArthikaHFTPriceListener listener ) throws IOException, InterruptedException {
         hftRequest hftrequest = new hftRequest();
-        hftrequest.getPosition = new getPositionRequest(user, token, assets, securities, accounts);
+        hftrequest.getPosition = new getPositionRequest(user, token, assets, securities, accounts, interval);
         myResponseHandler responseHandler = new myResponseHandler();
         return sendRequest(hftrequest, responseHandler, "/getPosition", true, listener);
 
@@ -590,15 +703,15 @@ public class ArthikaHFT {
 
     public List<orderTick> getOrder(List<String> securities, List<String> tinterfaces, List<String> types) throws IOException, InterruptedException {
         hftRequest hftrequest = new hftRequest();
-        hftrequest.getOrder = new getOrderRequest(user, token, securities, tinterfaces, types);
+        hftrequest.getOrder = new getOrderRequest(user, token, securities, tinterfaces, types, 0);
         myResponseHandler responseHandler = new myResponseHandler();
         sendRequest(hftrequest, responseHandler, "/getOrder", false, null);
         return responseHandler.getOrderTickList();
     }
 
-    public long getOrderBegin(List<String> securities, List<String> tinterfaces, List<String> types, ArthikaHFTPriceListener listener ) throws IOException, InterruptedException {
+    public long getOrderBegin(List<String> securities, List<String> tinterfaces, List<String> types, int interval, ArthikaHFTPriceListener listener ) throws IOException, InterruptedException {
         hftRequest hftrequest = new hftRequest();
-        hftrequest.getOrder = new getOrderRequest(user, token, securities, tinterfaces, types);
+        hftrequest.getOrder = new getOrderRequest(user, token, securities, tinterfaces, types, interval);
         myResponseHandler responseHandler = new myResponseHandler();
         return sendRequest(hftrequest, responseHandler, "/getOrder", true, listener);
     }
@@ -645,8 +758,8 @@ public class ArthikaHFT {
 
         mapper.setSerializationInclusion(Inclusion.NON_NULL);
         mapper.configure(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-        StringEntity request = new StringEntity(mapper.writeValueAsString(hftrequest).replaceAll("\n","").replaceAll(" ", ""));
-        System.out.println(mapper.writeValueAsString(hftrequest).replace("\n","").replaceAll(" ", ""));
+        StringEntity request = new StringEntity(mapper.writeValueAsString(hftrequest).replaceAll("\n",""));
+        System.out.println(mapper.writeValueAsString(hftrequest).replace("\n",""));
         responseHandler.setObjectMapper(mapper);
         responseHandler.setStream(stream);
         HttpPost httpRequest;

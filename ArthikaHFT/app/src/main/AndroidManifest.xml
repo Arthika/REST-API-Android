@@ -35,6 +35,11 @@
             android:theme="@style/AppTheme.TradeTheme">
         </activity>
 
+        <activity
+            android:name=".SettingsPop"
+            android:theme="@style/AppTheme.SettingsTheme">
+        </activity>
+
     </application>
 
 </manifest>

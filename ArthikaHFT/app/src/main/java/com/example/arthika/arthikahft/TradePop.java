@@ -143,12 +143,10 @@ public class TradePop extends Activity {
     private void refresh(){
         TextView tradeMessageTextView = (TextView) this.findViewById(R.id.tradeMessageTextView);
         if ("market".equals(type)) {
-            tradeValiditySpinner.setEnabled(false);
             tradePriceEditText.setEnabled(false);
             tradeMessageTextView.setText(side.toUpperCase() + " " + amount + " " + securitySelected + " at market price in " + ti);
         }
         else{
-            tradeValiditySpinner.setEnabled(true);
             tradePriceEditText.setEnabled(true);
             tradeMessageTextView.setText(side.toUpperCase() + " " + amount + " " + securitySelected + " at " + price + " in " + ti);
         }
@@ -175,8 +173,8 @@ public class TradePop extends Activity {
         order.quantity = Integer.valueOf(amount);
         order.side = side;
         order.type = type;
+        order.timeinforce = tradeValiditySpinner.getSelectedItem().toString();
         if (!order.type.equals("market")){
-            order.timeinforce = tradeValiditySpinner.getSelectedItem().toString();
             try {
                 NumberFormat format = NumberFormat.getInstance(Locale.getDefault());
                 order.price = format.parse(tradePriceEditText.getText().toString()).doubleValue();

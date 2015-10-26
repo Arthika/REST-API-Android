@@ -11,6 +11,7 @@
     <string name="SelectPrice">Select Price: </string>
     <string name="PendingOrders">Pending Orders</string>
     <string name="ClosedOrders">Closed Orders</string>
+    <string name="Accounting">Accounting</string>
     <string name="Positions">Positions</string>
     <string name="Assets">Assets</string>
     <string name="Modify">Modify</string>
@@ -19,4 +20,8 @@
     <string name="SelectNewAmount">Select New Amount: </string>
     <string name="SelectNewPrice">Select New Price: </string>
     <string name="CancelPendingOrders">Cancel Pending Orders</string>
+    <string name="SelectDomain">Select Domain: </string>
+    <string name="SelectInterval">Streaming Interval (ms): </string>
+    <string name="Strategy">Strategy: </string>
+    <string name="Password">Password: </string>
 </resources>
