@@ -70,9 +70,6 @@ public class PricePop extends Activity {
 
     public static void refresh(){
         if (chart!=null) {
-            ArrayList<Entry> valsComp1 = new ArrayList<Entry>();
-            ArrayList<Entry> valsComp2 = new ArrayList<Entry>();
-
             if (asklist == null || bidlist == null || intervallist == null) {
                 return;
             }
@@ -120,6 +117,8 @@ public class PricePop extends Activity {
                 }
             }
 
+            ArrayList<Entry> valsComp1 = new ArrayList<Entry>();
+            ArrayList<Entry> valsComp2 = new ArrayList<Entry>();
             for (int i = 0; i < asklist.size(); i++) {
                 Entry entry = new Entry( asklist.get(i).floatValue(), i);
                 valsComp1.add(entry);
@@ -156,7 +155,7 @@ public class PricePop extends Activity {
             LineData data = new LineData(xVals, dataSets);
             chart.setData(data);
             chart.invalidate();
-
+            chart.setDescription(securitySelected);
         }
     }
 

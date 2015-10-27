@@ -40,11 +40,13 @@ public class TradeModifyPop extends Activity {
 
         setContentView(R.layout.trademodify_pop);
 
+        /*
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         int width = dm.widthPixels;
         int height = dm.heightPixels;
         getWindow().setLayout((int) (width * 0.8), (int) (height * 0.6));
+        */
 
         TextView tradeModifySecTextView = (TextView) this.findViewById(R.id.tradeModifySecTextView);
         tradeModifySecTextView.setText(side.toUpperCase() + " " + securitySelected);

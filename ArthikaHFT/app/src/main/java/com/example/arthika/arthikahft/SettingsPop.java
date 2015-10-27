@@ -26,11 +26,13 @@ public class SettingsPop extends Activity {
 
         setContentView(R.layout.settings_pop);
 
+        /*
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         int width = dm.widthPixels;
         int height = dm.heightPixels;
         getWindow().setLayout((int) (width * 1), (int) (height * 1));
+        */
 
         ArrayAdapter<String> domainAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.domainlist);
         domainSpinner = (Spinner) this.findViewById(R.id.domainSpinner);
