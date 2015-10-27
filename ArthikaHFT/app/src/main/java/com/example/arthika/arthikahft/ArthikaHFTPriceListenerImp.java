@@ -1,6 +1,5 @@
 package com.example.arthika.arthikahft;
 
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Iterator;
 import java.util.List;
@@ -90,6 +89,29 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
     @Override
     public void accountingEvent(ArthikaHFT.accountingTick accountingTick) {
         synchronized(MainActivity.accountingArray) {
+            if (EquityPop.equitystrategylist !=null) {
+                EquityPop.equitystrategylist.add(accountingTick.strategyPL);
+                EquityPop.equitypoollist.add(accountingTick.totalequity);
+                EquityPop.equityintervallist.add(MainActivity.updateTime);
+                if (EquityPop.equityintervallist.size()> EquityPop.EQUITY_MAX_VALUES){
+                    synchronized(EquityPop.equitystrategylist){
+                        for (int i=0; i<10; i++){
+                            EquityPop.equitystrategylist.remove(0);
+                        }
+                    }
+                    synchronized(EquityPop.equitypoollist){
+                        for (int i=0; i<10; i++){
+                            EquityPop.equitypoollist.remove(0);
+                        }
+                    }
+                    synchronized(EquityPop.equityintervallist){
+                        for (int i=0; i<10; i++){
+                            EquityPop.equityintervallist.remove(0);
+                        }
+                        EquityPop.timeIni="";
+                    }
+                }
+            }
             MainActivity.accountingArray[0]=format(accountingTick.strategyPL);
             MainActivity.accountingArray[1]=format(accountingTick.totalequity);
             MainActivity.accountingArray[2]=format(accountingTick.usedmargin);

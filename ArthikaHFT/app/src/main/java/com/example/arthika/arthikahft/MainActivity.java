@@ -24,9 +24,7 @@ import android.widget.TextView;
 
 import org.apache.commons.codec.DecoderException;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -38,7 +36,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -139,8 +136,7 @@ public class MainActivity extends AppCompatActivity {
 
         updateTime = "";
 
-        //secs = Arrays.asList("EUR_USD", "EUR_GBP", "GBP_USD", "USD_JPY", "EUR_JPY", "GBP_JPY", "AUD_USD", "USD_CAD");
-        secs = Arrays.asList("EUR_USD", "EUR_GBP", "GBP_USD", "USD_JPY", "EUR_JPY", "GBP_JPY");
+        secs = Arrays.asList("EUR_USD", "EUR_GBP", "GBP_USD", "USD_JPY", "EUR_JPY", "GBP_JPY", "AUD_USD", "USD_CAD");
         prices = new String[PRICE_COLUMNS * (secs.size() + 1)];
         prices[0] = "SECURITY";
         prices[1] = "ASK";
@@ -153,6 +149,9 @@ public class MainActivity extends AppCompatActivity {
         validitylist = new String[]{"fill or kill", "day", "good till cancel", "inmediate or cancel"};
         TIlist = new String[]{"Baxter_CNX", "Cantor_CNX_3"};
         intervallist = new Integer[]{0, 100, 200, 500, 1000, 2000, 5000, 10000};
+        EquityPop.equitystrategylist = new ArrayList<Double>();
+        EquityPop.equitypoollist = new ArrayList<Double>();
+        EquityPop.equityintervallist = new ArrayList<String>();
 
         refreshSettings();
 
@@ -285,6 +284,9 @@ public class MainActivity extends AppCompatActivity {
         }
         pendingOrderArray.clear();
         closedOrderArray.clear();
+        EquityPop.equitystrategylist = new ArrayList<Double>();
+        EquityPop.equitypoollist = new ArrayList<Double>();
+        EquityPop.equityintervallist = new ArrayList<String>();
         accountingArray[0]="0.0";
         accountingArray[1]="0.0";
         accountingArray[2]="0.0";
@@ -454,6 +456,7 @@ public class MainActivity extends AppCompatActivity {
                                 PositionFragment.accountingGridView.setAdapter(accountingAdapter);
                             }
                         }
+                        EquityPop.refresh();
 
                         if (positionChanged) {
                             positionChanged = false;
@@ -780,6 +783,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public static class PositionFragment extends Fragment {
 
+        static Button equityButton;
         static GridView accountingGridView;
         static GridView accountingHeaderGridView;
         static GridView positionGridView;
@@ -804,6 +808,8 @@ public class MainActivity extends AppCompatActivity {
                                  Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.activity_position, container, false);
             System.out.println("CREATING PositionFragment");
+
+            equityButton = (Button) view.findViewById(R.id.equityButton);
 
             accountingHeaderGridView = (GridView) view.findViewById(R.id.accountingHeaderGridView);
             accountingHeaderGridView.setNumColumns(ACCOUNTING_COLUMNS);
@@ -856,6 +862,13 @@ public class MainActivity extends AppCompatActivity {
             ArrayAdapter<String> assetAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridview_format, assetArray);
             assetAdapter.notifyDataSetChanged();
             assetGridView.setAdapter(assetAdapter);
+
+            equityButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(new Intent(v.getContext(), EquityPop.class));
+                }
+            });
 
             return view;
         }

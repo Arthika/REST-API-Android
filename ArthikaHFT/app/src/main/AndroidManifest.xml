@@ -12,6 +12,7 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".MainActivity"
+            android:screenOrientation="portrait"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -38,6 +39,11 @@
         <activity
             android:name=".SettingsPop"
             android:theme="@style/AppTheme.SettingsTheme">
+        </activity>
+
+        <activity
+            android:name=".EquityPop"
+            android:theme="@style/AppTheme.EquityTheme">
         </activity>
 
     </application>

@@ -12,6 +12,7 @@
     <string name="PendingOrders">Pending Orders</string>
     <string name="ClosedOrders">Closed Orders</string>
     <string name="Accounting">Accounting</string>
+    <string name="Equity">Equity</string>
     <string name="Positions">Positions</string>
     <string name="Assets">Assets</string>
     <string name="Modify">Modify</string>
