@@ -11,11 +11,15 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.YAxisValueFormatter;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 /**
  * Created by Jaime on 22/09/2015.
@@ -30,6 +34,7 @@ public class EquityPop extends Activity {
     public static String timeIni;
     private static TextView equityTimeIniTextView;
     private static TextView equityTimeEndTextView;
+    private static MyValueFormatter myValueFormatter;
 
     public static final int EQUITY_MAX_VALUES = 80;
 
@@ -55,6 +60,7 @@ public class EquityPop extends Activity {
 
         equitystrategyChart = (LineChart) findViewById(R.id.equityStrategyChart);
         equitypoolChart = (LineChart) findViewById(R.id.equityPoolChart);
+        myValueFormatter = new MyValueFormatter();
 
     }
 
@@ -114,6 +120,7 @@ public class EquityPop extends Activity {
 
             YAxis axis = equitystrategyChart.getAxisLeft();
             axis.setStartAtZero(false);
+            axis.setValueFormatter(myValueFormatter);
 
             equitystrategyChart.getAxisRight().setEnabled(false);
             equitystrategyChart.getXAxis().setEnabled(false);
@@ -147,6 +154,7 @@ public class EquityPop extends Activity {
 
             YAxis axis = equitypoolChart.getAxisLeft();
             axis.setStartAtZero(false);
+            axis.setValueFormatter(myValueFormatter);
 
             equitypoolChart.getAxisRight().setEnabled(false);
             equitypoolChart.getXAxis().setEnabled(false);
@@ -156,6 +164,38 @@ public class EquityPop extends Activity {
             equitypoolChart.setData(data);
             equitypoolChart.invalidate();
             equitypoolChart.setDescription("Pool Equity");
+        }
+    }
+
+
+
+    public class MyValueFormatter implements YAxisValueFormatter {
+
+        public MyValueFormatter() {
+        }
+
+        private final NavigableMap<Float, String> suffixes = new TreeMap<>();{
+            suffixes.put(1000.0f, "K");
+            suffixes.put(1000000.0f, "M");
+            suffixes.put(1000000000.0f, "G");
+            suffixes.put(1000000000000.0f, "T");
+            suffixes.put(1000000000000000.0f, "P");
+            suffixes.put(1000000000000000000.0f, "E");
+        }
+
+        @Override
+        public String getFormattedValue(float value, YAxis axis) {
+            if (value == Long.MIN_VALUE) return getFormattedValue(Long.MIN_VALUE + 1, axis);
+            if (value < 0) return "-" + getFormattedValue(-value, axis);
+            if (value < 1000) return String.format("%.2f", value);
+
+            Map.Entry<Float, String> e = suffixes.floorEntry(value);
+            Float divideBy = e.getKey();
+            String suffix = e.getValue();
+
+            float truncated = value / (divideBy / 10);
+            boolean hasDecimal = truncated < 100 && (truncated / 10d) != (truncated / 10);
+            return hasDecimal ? String.format("%.2f",truncated / 10d) + suffix : String.format("%.2f", truncated / 10) + suffix;
         }
     }
 

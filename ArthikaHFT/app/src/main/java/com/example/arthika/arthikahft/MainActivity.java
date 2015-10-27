@@ -253,8 +253,8 @@ public class MainActivity extends AppCompatActivity {
         url_challenge="/fcgi-bin/IHFTRestAuth/getAuthorizationChallenge";
         url_token="/fcgi-bin/IHFTRestAuth/getAuthorizationToken";
         interval=0;
-        user="jaime_api";
-        password="jaime_api";
+        user="demo";
+        password="demo";
     }
 
     public static void refreshSettings(){
