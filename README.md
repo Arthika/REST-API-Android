@@ -8,9 +8,32 @@ This sample App for Android demonstrates the use of Arthika's REST API.
 
 <a name="Screenshots"/>
 ### Screenshots:
+
+Start:
 ![Sample App screenshot preview](Images/Android-Sample-App-0.png)
+
+Getting prices:
 ![Sample App screenshot preview](Images/Android-Sample-App-1.png)
+
+Watching prices:
 ![Sample App screenshot preview](Images/Android-Sample-App-2.png)
+![Sample App screenshot preview](Images/Android-Sample-App-3.png)
+
+Send order:
+![Sample App screenshot preview](Images/Android-Sample-App-4.png)
+
+Watching order:
+![Sample App screenshot preview](Images/Android-Sample-App-5.png)
+
+Cancel order:
+![Sample App screenshot preview](Images/Android-Sample-App-6.png)
+
+Modify order:
+![Sample App screenshot preview](Images/Android-Sample-App-7.png)
+
+Accounting:
+![Sample App screenshot preview](Images/Android-Sample-App-8.png)
+
 <a name="Requirements"/>
 ### Requirements:
 You will need Android Studio at least 1.3.2 version, you can download these from
