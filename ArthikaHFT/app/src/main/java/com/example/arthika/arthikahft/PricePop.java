@@ -12,9 +12,7 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -70,6 +68,7 @@ public class PricePop extends Activity {
 
     public static void refresh(){
         if (chart!=null) {
+
             if (asklist == null || bidlist == null || intervallist == null) {
                 return;
             }
@@ -80,18 +79,12 @@ public class PricePop extends Activity {
 
             if (timeIni.equals("") && timeIniTextView!=null){
                 long timelong = new Double(new Double(intervallist.get(0)) * 1000).longValue();
-                Date date = new Date();
-                date.setTime(timelong);
-                SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-                timeIniTextView.setText(dateFormat.format(date));
+                timeIniTextView.setText(Utils.timeToString(timelong));
             }
 
             if (timeEndTextView!=null){
                 long timelong = new Double(new Double(intervallist.get(intervallist.size()-1)) * 1000).longValue();
-                Date date = new Date();
-                date.setTime(timelong);
-                SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-                timeEndTextView.setText(dateFormat.format(date));
+                timeEndTextView.setText(Utils.timeToString(timelong));
             }
 
             if (intervallist.size()>MAX_VALUES){
@@ -100,10 +93,7 @@ public class PricePop extends Activity {
                         asklist.remove(0);
                     }
                     long timelong = new Double(new Double(intervallist.get(0)) * 1000).longValue();
-                    Date date = new Date();
-                    date.setTime(timelong);
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-                    timeIniTextView.setText(dateFormat.format(date));
+                    timeIniTextView.setText(Utils.timeToString(timelong));
                 }
                 synchronized(bidlist){
                     for (int i=0; i<10; i++){

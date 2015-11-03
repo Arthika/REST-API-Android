@@ -13,13 +13,8 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.YAxisValueFormatter;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 
 /**
  * Created by Jaime on 22/09/2015.
@@ -83,18 +78,12 @@ public class EquityPop extends Activity {
 
             if (timeIni.equals("") && equityTimeIniTextView!=null){
                 long timelong = new Double(new Double(equityintervallist.get(0)) * 1000).longValue();
-                Date date = new Date();
-                date.setTime(timelong);
-                SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-                equityTimeIniTextView.setText(dateFormat.format(date));
+                equityTimeIniTextView.setText(Utils.timeToString(timelong));
             }
 
             if (equityTimeEndTextView!=null){
                 long timelong = new Double(new Double(equityintervallist.get(equityintervallist.size()-1)) * 1000).longValue();
-                Date date = new Date();
-                date.setTime(timelong);
-                SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-                equityTimeEndTextView.setText(dateFormat.format(date));
+                equityTimeEndTextView.setText(Utils.timeToString(timelong));
             }
         }
 
@@ -174,28 +163,9 @@ public class EquityPop extends Activity {
         public MyValueFormatter() {
         }
 
-        private final NavigableMap<Float, String> suffixes = new TreeMap<>();{
-            suffixes.put(1000.0f, "K");
-            suffixes.put(1000000.0f, "M");
-            suffixes.put(1000000000.0f, "G");
-            suffixes.put(1000000000000.0f, "T");
-            suffixes.put(1000000000000000.0f, "P");
-            suffixes.put(1000000000000000000.0f, "E");
-        }
-
         @Override
         public String getFormattedValue(float value, YAxis axis) {
-            if (value == Long.MIN_VALUE) return getFormattedValue(Long.MIN_VALUE + 1, axis);
-            if (value < 0) return "-" + getFormattedValue(-value, axis);
-            if (value < 1000) return String.format("%.2f", value);
-
-            Map.Entry<Float, String> e = suffixes.floorEntry(value);
-            Float divideBy = e.getKey();
-            String suffix = e.getValue();
-
-            float truncated = value / (divideBy / 10);
-            boolean hasDecimal = truncated < 100 && (truncated / 10d) != (truncated / 10);
-            return hasDecimal ? String.format("%.2f",truncated / 10d) + suffix : String.format("%.2f", truncated / 10) + suffix;
+            return Utils.doubleToString(value);
         }
     }
 

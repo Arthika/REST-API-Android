@@ -1,12 +1,7 @@
 package com.example.arthika.arthikahft;
 
-import java.text.NumberFormat;
-import java.util.Iterator;
+import java.text.ParseException;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 
 /**
  * Created by Jaime on 22/09/2015.
@@ -31,55 +26,50 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
 
     @Override
     public void priceEvent(List<ArthikaHFT.priceTick> priceTickList) {
-        NumberFormat format = NumberFormat.getInstance(Locale.getDefault());
+        String[] prices = new String[MainActivity.PRICE_COLUMNS * (MainActivity.secs.size() + 1)];
+        Double[] pricesArray = new Double[MainActivity.PRICE_COLUMNS * (MainActivity.secs.size() + 1)];
+        for (int i=0; i<MainActivity.secs.size(); i++){
+            prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1] = Utils.doubleToString(0);
+            prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2] = Utils.doubleToString(0);
+            pricesArray[(i + 1) * MainActivity.PRICE_COLUMNS + 1] = 0.0;
+            pricesArray[(i + 1) * MainActivity.PRICE_COLUMNS + 2] = 0.0;
+        }
         for (ArthikaHFT.priceTick tick : priceTickList){
             //System.out.println("Security: " + tick.security + " Price: " + tick.price + " Side: " + tick.side + " Liquidity: " + tick.liquidity);
             for (int i=0; i<MainActivity.secs.size(); i++){
                 if (tick.security.equals(MainActivity.secs.get(i))){
                     if (tick.side.equals("ask")){
-                        MainActivity.pricesMapArray[(i + 1) * MainActivity.PRICE_COLUMNS + 1].put(tick.tinterface, String.format("%." + tick.pips + "f", tick.price));
-                        if (tick.security.equals(PricePop.securitySelected) && PricePop.asklist!=null){
-                            Map map1 = MainActivity.pricesMapArray[(i + 1) * MainActivity.PRICE_COLUMNS + 1];
-                            Iterator<String> it1 = (Iterator<String>) map1.keySet().iterator();
-                            double bestask = 0;
-                            while (it1.hasNext()){
-                                String next = (String) map1.get(it1.next());
-                                double nextdouble = 0;
-                                try {
-                                    nextdouble = format.parse(next).doubleValue();
-                                }
-                                catch (Exception ex){
-                                    nextdouble = Double.parseDouble(next);
-                                }
-                                if (bestask<=0 || nextdouble<bestask){
-                                    bestask = nextdouble;
-                                }
-                            }
-                            PricePop.asklist.add(bestask);
+                        double bestask = pricesArray[(i + 1) * MainActivity.PRICE_COLUMNS + 1];
+                        if ((bestask<=0 || bestask>tick.price) && tick.price>0){
+                            pricesArray[(i + 1) * MainActivity.PRICE_COLUMNS + 1] = tick.price;
+                            prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1] = Utils.doubleToString(tick.price, tick.pips);
                         }
                     }
                     if (tick.side.equals("bid")){
-                        MainActivity.pricesMapArray[(i + 1) * MainActivity.PRICE_COLUMNS + 2].put(tick.tinterface, String.format("%." + tick.pips + "f", tick.price));
-                        if (tick.security.equals(PricePop.securitySelected) && PricePop.bidlist!=null) {
-                            Map map2 = MainActivity.pricesMapArray[(i + 1) * MainActivity.PRICE_COLUMNS + 2];
-                            Iterator<String> it2 = (Iterator<String>) map2.keySet().iterator();
-                            double bestbid = 0;
-                            while (it2.hasNext()){
-                                String next = (String) map2.get(it2.next());
-                                double nextdouble = 0;
-                                try {
-                                    nextdouble = format.parse(next).doubleValue();
-                                }
-                                catch (Exception ex){
-                                    nextdouble = Double.parseDouble(next);
-                                }
-                                if (bestbid<=0 || nextdouble>bestbid){
-                                    bestbid = nextdouble;
-                                }
-                            }
-                            PricePop.bidlist.add(bestbid);
-                            PricePop.intervallist.add(MainActivity.updateTime);
+                        double bestbid = pricesArray[(i + 1) * MainActivity.PRICE_COLUMNS + 2];
+                        if (bestbid<=0 || bestbid<tick.price){
+                            pricesArray[(i + 1) * MainActivity.PRICE_COLUMNS + 2] = tick.price;
+                            prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2] = Utils.doubleToString(tick.price, tick.pips);
                         }
+                    }
+                }
+            }
+        }
+        synchronized(MainActivity.prices) {
+            for (int i = 0; i < MainActivity.secs.size(); i++) {
+                MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1] = prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1];
+                MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2] = prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2];
+            }
+        }
+        if (PricePop.securitySelected!=null && PricePop.asklist!=null && PricePop.bidlist!=null){
+            for (int i=0; i<MainActivity.secs.size(); i++){
+                if (MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS].equals(PricePop.securitySelected)){
+                    try {
+                        PricePop.intervallist.add(MainActivity.updateTime);
+                        PricePop.asklist.add(Utils.stringToDouble(MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1]));
+                        PricePop.bidlist.add(Utils.stringToDouble(MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2]));
+                    } catch (ParseException e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -112,10 +102,10 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                     }
                 }
             }
-            MainActivity.accountingArray[0]=format(accountingTick.strategyPL);
-            MainActivity.accountingArray[1]=format(accountingTick.totalequity);
-            MainActivity.accountingArray[2]=format(accountingTick.usedmargin);
-            MainActivity.accountingArray[3]=format(accountingTick.freemargin);
+            MainActivity.accountingArray[0]=Utils.doubleToString(accountingTick.strategyPL);
+            MainActivity.accountingArray[1]=Utils.doubleToString(accountingTick.totalequity);
+            MainActivity.accountingArray[2]=Utils.doubleToString(accountingTick.usedmargin);
+            MainActivity.accountingArray[3]=Utils.doubleToString(accountingTick.freemargin);
             MainActivity.accountingChanged = true;
         }
     }
@@ -136,8 +126,8 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                 boolean found = false;
                 for (int i = 0; i < MainActivity.assetArray.size(); i = i + MainActivity.ASSET_COLUMNS) {
                     if (asset.equals(MainActivity.assetArray.get(i)) && account.equals(MainActivity.assetArray.get(i+1))) {
-                        MainActivity.assetArray.set(i + 2, format(tick.exposure));
-                        MainActivity.assetArray.set(i + 3, format(tick.totalrisk));
+                        MainActivity.assetArray.set(i + 2, Utils.doubleToString(tick.exposure));
+                        MainActivity.assetArray.set(i + 3, Utils.doubleToString(tick.totalrisk));
                         System.out.println("Asset Modified");
                         found = true;
                         break;
@@ -146,8 +136,8 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                 if (!found) {
                     MainActivity.assetArray.add(asset);
                     MainActivity.assetArray.add(account);
-                    MainActivity.assetArray.add(format(tick.exposure));
-                    MainActivity.assetArray.add(format(tick.totalrisk));
+                    MainActivity.assetArray.add(Utils.doubleToString(tick.exposure));
+                    MainActivity.assetArray.add(Utils.doubleToString(tick.totalrisk));
                     System.out.println("Asset Added");
                 }
             }
@@ -171,9 +161,9 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                 boolean found = false;
                 for (int i = 0; i < MainActivity.positionArray.size(); i = i + MainActivity.POSITION_COLUMNS) {
                     if (security.equals(MainActivity.positionArray.get(i)) && account.equals(MainActivity.positionArray.get(i+1))) {
-                        MainActivity.positionArray.set(i + 2, format(tick.exposure));
+                        MainActivity.positionArray.set(i + 2, Utils.doubleToString(tick.exposure));
                         MainActivity.positionArray.set(i + 3, tick.side);
-                        MainActivity.positionArray.set(i + 4, String.format("%." + tick.pips + "f", tick.price));
+                        MainActivity.positionArray.set(i + 4, Utils.doubleToString(tick.price, tick.pips));
                         System.out.println("Position Modified");
                         found = true;
                         break;
@@ -182,9 +172,9 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                 if (!found) {
                     MainActivity.positionArray.add(security);
                     MainActivity.positionArray.add(account);
-                    MainActivity.positionArray.add(format(tick.exposure));
+                    MainActivity.positionArray.add(Utils.doubleToString(tick.exposure));
                     MainActivity.positionArray.add(tick.side);
-                    MainActivity.positionArray.add(String.format("%." + tick.pips + "f", tick.price));
+                    MainActivity.positionArray.add(Utils.doubleToString(tick.price, tick.pips));
                     System.out.println("Position Added");
                 }
             }
@@ -237,7 +227,7 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                             MainActivity.pendingOrderArray.set(i + 2, tick.security);
                             MainActivity.pendingOrderArray.set(i + 3, String.valueOf(tick.quantity));
                             MainActivity.pendingOrderArray.set(i + 4, tick.side);
-                            MainActivity.pendingOrderArray.set(i + 5, String.format("%." + tick.pips + "f", tick.limitprice));
+                            MainActivity.pendingOrderArray.set(i + 5, Utils.doubleToString(tick.limitprice, tick.pips));
                             System.out.println("Pending Order Modified");
                             found = true;
                             break;
@@ -249,7 +239,7 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                         MainActivity.pendingOrderArray.add(2, tick.security);
                         MainActivity.pendingOrderArray.add(3, String.valueOf(tick.quantity));
                         MainActivity.pendingOrderArray.add(4, tick.side);
-                        MainActivity.pendingOrderArray.add(5, String.format("%." + tick.pips + "f", tick.limitprice));
+                        MainActivity.pendingOrderArray.add(5, Utils.doubleToString(tick.limitprice, tick.pips));
                         MainActivity.pendingOrderArray.add(6, "Modify");
                         MainActivity.pendingOrderArray.add(7, "Cancel");
                         System.out.println("Pending Order Added");
@@ -276,7 +266,7 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                             MainActivity.closedOrderArray.set(i + 1, tick.security);
                             MainActivity.closedOrderArray.set(i + 2, String.valueOf(tick.finishedquantity));
                             MainActivity.closedOrderArray.set(i + 3, tick.side);
-                            MainActivity.closedOrderArray.set(i + 4, String.format("%." + tick.pips + "f", tick.finishedprice));
+                            MainActivity.closedOrderArray.set(i + 4, Utils.doubleToString(tick.finishedprice, tick.pips));
                             MainActivity.closedOrderArray.set(i + 5, tick.status);
                             System.out.println("Order Modified");
                             found = true;
@@ -288,7 +278,7 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                         MainActivity.closedOrderArray.add(1, tick.security);
                         MainActivity.closedOrderArray.add(2, String.valueOf(tick.finishedquantity));
                         MainActivity.closedOrderArray.add(3, tick.side);
-                        MainActivity.closedOrderArray.add(4, String.format("%." + tick.pips + "f", tick.finishedprice));
+                        MainActivity.closedOrderArray.add(4, Utils.doubleToString(tick.finishedprice, tick.pips));
                         MainActivity.closedOrderArray.add(5, tick.status);
                         System.out.println("Order Added");
                     }
@@ -319,29 +309,4 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
         */
     }
 
-    private static final NavigableMap<Double, String> suffixes = new TreeMap<>();
-    static {
-        suffixes.put(1000.0, "K");
-        suffixes.put(1000000.0, "M");
-        suffixes.put(1000000000.0, "G");
-        suffixes.put(1000000000000.0, "T");
-        suffixes.put(1000000000000000.0, "P");
-        suffixes.put(1000000000000000000.0, "E");
-    }
-
-    public static String format(double value) {
-        //Long.MIN_VALUE == -Long.MIN_VALUE so we need an adjustment here
-        if (value == Long.MIN_VALUE) return format(Long.MIN_VALUE + 1);
-        if (value < 0) return "-" + format(-value);
-        if (value < 1000) return String.format("%.2f", value); //deal with easy case
-
-        Map.Entry<Double, String> e = suffixes.floorEntry(value);
-        Double divideBy = e.getKey();
-        String suffix = e.getValue();
-
-        double truncated = value / (divideBy / 10); //the number part of the output times 10
-        boolean hasDecimal = truncated < 100 && (truncated / 10d) != (truncated / 10);
-        return hasDecimal ? String.format("%.2f",truncated / 10d) + suffix : String.format("%.2f", truncated / 10) + suffix;
-        //return "0.0";
-    }
 }

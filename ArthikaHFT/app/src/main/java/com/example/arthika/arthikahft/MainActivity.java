@@ -1,5 +1,6 @@
 package com.example.arthika.arthikahft;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -25,23 +26,14 @@ import android.widget.TextView;
 import org.apache.commons.codec.DecoderException;
 
 import java.io.IOException;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
-
-    NumberFormat format = NumberFormat.getInstance(Locale.getDefault());
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -76,13 +68,15 @@ public class MainActivity extends AppCompatActivity {
     static long priceStreamingId;
     static long orderStreamingId;
     static long positionStreamingId;
-    static Map<String, String>[] pricesMapArray;
     static String[] prices;
     static List<String> secs;
+    static String[] secsAll;
+    static List<Boolean> secsSelected;
+    static String[] TIlist;
+    static String[] accountlist;
     static Integer[] amountlist;
     static String[] typelist;
     static String[] validitylist;
-    static String[] TIlist;
     static Integer[] intervallist;
     static String updateTime;
     static AlertDialog alertOrder;
@@ -136,18 +130,16 @@ public class MainActivity extends AppCompatActivity {
 
         updateTime = "";
 
-        secs = Arrays.asList("EUR_USD", "EUR_GBP", "GBP_USD", "USD_JPY", "EUR_JPY", "GBP_JPY", "AUD_USD", "USD_CAD");
-        prices = new String[PRICE_COLUMNS * (secs.size() + 1)];
-        prices[0] = "SECURITY";
-        prices[1] = "ASK";
-        prices[2] = "BID";
-        pricesMapArray = new HashMap[PRICE_COLUMNS * (secs.size() + 1)];
+        secsAll = new String[]{"EUR_USD", "EUR_GBP", "GBP_USD", "USD_JPY", "EUR_JPY", "GBP_JPY", "AUD_USD", "USD_CAD"};
+        secs = new ArrayList<String>();
+        secsSelected = new ArrayList<Boolean>();
+        for (int i=0; i<secsAll.length; i++){
+            secsSelected.add(true);
+        }
         accountingArray = new String[4];
-
         amountlist = new Integer[]{100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000};
         typelist = new String[]{"market", "limit"};
         validitylist = new String[]{"fill or kill", "day", "good till cancel", "inmediate or cancel"};
-        TIlist = new String[]{"Baxter_CNX", "Cantor_CNX_3"};
         intervallist = new Integer[]{0, 100, 200, 500, 1000, 2000, 5000, 10000};
         EquityPop.equitystrategylist = new ArrayList<Double>();
         EquityPop.equitypoollist = new ArrayList<Double>();
@@ -271,26 +263,39 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         started = false;
+
+        secs.clear();
+        for (int i=0; i<secsAll.length; i++){
+            if (secsSelected.get(i)){
+                secs.add(secsAll[i]);
+            }
+        }
+        prices = new String[PRICE_COLUMNS * (secs.size() + 1)];
+        prices[0] = "SECURITY";
+        prices[1] = "ASK";
+        prices[2] = "BID";
         PricesFragment.refreshSettingsText();
 
         wrapper = new ArthikaHFT(domain, url_stream, url_polling, url_challenge, url_token, user, password, authentication_port, request_port);
 
+        clearData();
+    }
+
+    private static void clearData(){
         for (int i = 0; i < secs.size(); i++) {
             prices[(i + 1) * PRICE_COLUMNS] = secs.get(i);
-            prices[(i + 1) * PRICE_COLUMNS + 1] = "0.0";
-            prices[(i + 1) * PRICE_COLUMNS + 2] = "0.0";
-            pricesMapArray[(i + 1) * PRICE_COLUMNS + 1] = new HashMap<String, String>();
-            pricesMapArray[(i + 1) * PRICE_COLUMNS + 2] = new HashMap<String, String>();
+            prices[(i + 1) * PRICE_COLUMNS + 1] = Utils.doubleToString(0);
+            prices[(i + 1) * PRICE_COLUMNS + 2] = Utils.doubleToString(0);
         }
         pendingOrderArray.clear();
         closedOrderArray.clear();
         EquityPop.equitystrategylist = new ArrayList<Double>();
         EquityPop.equitypoollist = new ArrayList<Double>();
         EquityPop.equityintervallist = new ArrayList<String>();
-        accountingArray[0]="0.0";
-        accountingArray[1]="0.0";
-        accountingArray[2]="0.0";
-        accountingArray[3]="0.0";
+        accountingArray[0]=Utils.doubleToString(0);
+        accountingArray[1]=Utils.doubleToString(0);
+        accountingArray[2]=Utils.doubleToString(0);
+        accountingArray[3]=Utils.doubleToString(0);
         positionArray.clear();
         assetArray.clear();
         pendingOrderChanged = true;
@@ -298,6 +303,58 @@ public class MainActivity extends AppCompatActivity {
         accountingChanged = true;
         positionChanged = true;
         assetChanged = true;
+    }
+
+    private static void getAccount() {
+        new getAccountConnection().execute();
+    }
+
+    private static class getAccountConnection extends AsyncTask {
+
+        @Override
+        protected Object doInBackground(Object... arg0) {
+            getAccountConnect();
+            return null;
+        }
+
+    }
+
+    private static void getAccountConnect() {
+        try {
+            final List<ArthikaHFT.accountTick> accountTickList = wrapper.getAccount();
+            accountlist = new String[accountTickList.size()];
+            for (int i=0; i<accountTickList.size(); i++){
+                accountlist[i] = accountTickList.get(i).name;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void getInterface() {
+        new getInterfaceConnection().execute();
+    }
+
+    private static class getInterfaceConnection extends AsyncTask {
+
+        @Override
+        protected Object doInBackground(Object... arg0) {
+            getInterfaceConnect();
+            return null;
+        }
+
+    }
+
+    private static void getInterfaceConnect() {
+        try {
+            final List<ArthikaHFT.tinterfaceTick> tinterfaceTickList = wrapper.getInterface();
+            TIlist = new String[tinterfaceTickList.size()];
+            for (int i=0; i<tinterfaceTickList.size(); i++){
+                TIlist[i] = tinterfaceTickList.get(i).name;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static void doAuthentication() {
@@ -363,61 +420,16 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
 
                     if (PricesFragment.pricesGridView!=null) {
-                        Calendar calendar = Calendar.getInstance();
-                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd:MMMM:yyyy HH:mm:ss a");
-                        final String strDate = simpleDateFormat.format(calendar.getTime());
                         if (updateTime != null && !updateTime.equals("")) {
                             long timelong = new Double(new Double(updateTime) * 1000).longValue();
-                            Date date = new Date();
-                            date.setTime(timelong);
-                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                            PricesFragment.updateTimeTextView.setText(dateFormat.format(date));
+                            PricesFragment.updateTimeTextView.setText(Utils.dateToString(timelong));
                         }
-
-                        // Update best ask & bid
-                        try {
-                            for (int i = 0; i < secs.size(); i++) {
-                                Map map1 = pricesMapArray[(i + 1) * PRICE_COLUMNS + 1];
-                                Iterator<String> it1 = (Iterator<String>) map1.keySet().iterator();
-                                String bestask = "0";
-                                while (it1.hasNext()) {
-                                    String next = (String) map1.get(it1.next());
-                                    double nextdouble = 0;
-                                    try {
-                                        nextdouble = format.parse(next).doubleValue();
-                                    } catch (Exception ex) {
-                                        nextdouble = Double.parseDouble(next);
-                                    }
-                                    if (format.parse(bestask).doubleValue() <= 0 || nextdouble < format.parse(bestask).doubleValue()) {
-                                        bestask = next;
-                                    }
-                                }
-                                prices[(i + 1) * PRICE_COLUMNS + 1] = bestask;
-                                Map map2 = pricesMapArray[(i + 1) * PRICE_COLUMNS + 2];
-                                Iterator<String> it2 = (Iterator<String>) map2.keySet().iterator();
-                                String bestbid = "0";
-                                while (it2.hasNext()) {
-                                    String next = (String) map2.get(it2.next());
-                                    double nextdouble = 0;
-                                    try {
-                                        nextdouble = format.parse(next).doubleValue();
-                                    } catch (Exception ex) {
-                                        nextdouble = Double.parseDouble(next);
-                                    }
-                                    if (format.parse(bestbid).doubleValue() <= 0 || nextdouble > format.parse(bestbid).doubleValue()) {
-                                        bestbid = next;
-                                    }
-                                }
-                                prices[(i + 1) * PRICE_COLUMNS + 2] = bestbid;
-                            }
+                        synchronized(MainActivity.prices) {
+                            ArrayAdapter priceAdapter = (ArrayAdapter) PricesFragment.pricesGridView.getAdapter();
+                            priceAdapter.notifyDataSetChanged();
+                            PricesFragment.pricesGridView.setAdapter(priceAdapter);
+                            PricePop.refresh();
                         }
-                        catch (Exception ex){
-                            ex.printStackTrace();
-                        }
-                        ArrayAdapter priceAdapter = (ArrayAdapter) PricesFragment.pricesGridView.getAdapter();
-                        priceAdapter.notifyDataSetChanged();
-                        PricesFragment.pricesGridView.setAdapter(priceAdapter);
-                        PricePop.refresh();
                     }
 
                     // update orders
@@ -583,11 +595,15 @@ public class MainActivity extends AppCompatActivity {
                     stopButton.setEnabled(true);
                     updateTime = "";
                     updateTimeTextView.setText("Getting prices");
+                    clearData();
                     try {
                         synchronized (wrapper) {
                             doAuthentication();
                             wrapper.wait();
                         }
+                        getAccount();
+                        getInterface();
+
                         priceStreamingId = wrapper.getPriceBegin(secs, null, "tob", 1, interval, new ArthikaHFTPriceListenerImp());
                         System.out.println("Starting :" + priceStreamingId);
                         orderStreamingId = wrapper.getOrderBegin(null, null, null, interval, new ArthikaHFTPriceListenerImp());
@@ -622,9 +638,9 @@ public class MainActivity extends AppCompatActivity {
                         System.out.println("Finishing :" + priceStreamingId);
                         wrapper.getPriceEnd(priceStreamingId);
                         System.out.println("Finishing :" + orderStreamingId);
-                        wrapper.getPriceEnd(orderStreamingId);
+                        wrapper.getOrderEnd(orderStreamingId);
                         System.out.println("Finishing :" + positionStreamingId);
-                        wrapper.getPriceEnd(positionStreamingId);
+                        wrapper.getPositionEnd(positionStreamingId);
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -634,6 +650,9 @@ public class MainActivity extends AppCompatActivity {
             pricesGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
+                    if (!started){
+                        return;
+                    }
                     if (position > (PRICE_COLUMNS - 1)) {
                         cellSelected = position;
                         if ((cellSelected % PRICE_COLUMNS) == 0) {
@@ -663,14 +682,22 @@ public class MainActivity extends AppCompatActivity {
             if (domainTextView!=null) {
                 domainTextView.setText("Domain: " + domain);
                 userTextView.setText("Strategy: " + user);
-                if (started){
+                if (started) {
                     startButton.setEnabled(false);
                     stopButton.setEnabled(true);
-                }
-                else{
+                } else {
                     startButton.setEnabled(true);
                     stopButton.setEnabled(false);
                     updateTimeTextView.setText("Click 'Start' for streaming");
+                }
+            }
+            if (pricesGridView!=null) {
+                ArrayAdapter priceAdapter = (ArrayAdapter) pricesGridView.getAdapter();
+                if (priceAdapter!=null) {
+                    Context context = priceAdapter.getContext();
+                    priceAdapter = new ArrayAdapter(context, android.R.layout.simple_list_item_1, prices);
+                    priceAdapter.notifyDataSetChanged();
+                    pricesGridView.setAdapter(priceAdapter);
                 }
             }
         }
@@ -708,7 +735,7 @@ public class MainActivity extends AppCompatActivity {
 
             pendingOrderHeaderGridView = (GridView) view.findViewById(R.id.pendingOrderHeaderGridView);
             pendingOrderHeaderGridView.setNumColumns(PENDINGORDER_COLUMNS);
-            pendingOrderHeaderGridView.setPadding(-((width - 6 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 2))*2, 0, 0, 0);
+            pendingOrderHeaderGridView.setPadding(-((width - 6 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 2)) * 2, 0, 0, 0);
             List<String> pendingOrderHeaderArray = new ArrayList<String> ();
             pendingOrderHeaderArray.add("OrderId");
             pendingOrderHeaderArray.add("FixId");
@@ -753,6 +780,9 @@ public class MainActivity extends AppCompatActivity {
             pendingOrderGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
+                    if (!started){
+                        return;
+                    }
                     cellSelected = position;
                     System.out.println("selected " + cellSelected);
                     if ((cellSelected % PENDINGORDER_COLUMNS) == (PENDINGORDER_COLUMNS - 2)) {
@@ -866,6 +896,9 @@ public class MainActivity extends AppCompatActivity {
             equityButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    if (!started){
+                        return;
+                    }
                     startActivity(new Intent(v.getContext(), EquityPop.class));
                 }
             });

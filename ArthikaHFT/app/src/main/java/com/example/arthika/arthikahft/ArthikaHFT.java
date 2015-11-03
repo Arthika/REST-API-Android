@@ -60,6 +60,8 @@ public class ArthikaHFT {
     public static class hftRequest {
         public getAuthorizationChallengeRequest getAuthorizationChallenge;
         public getAuthorizationTokenRequest     getAuthorizationToken;
+        public getAccountRequest                getAccount;
+        public getInterfaceRequest              getInterface;
         public getPriceRequest     getPrice;
         public getPositionRequest  getPosition;
         public getOrderRequest     getOrder;
@@ -74,6 +76,8 @@ public class ArthikaHFT {
     public static class hftResponse {
         public getAuthorizationChallengeResponse getAuthorizationChallengeResponse;
         public getAuthorizationTokenResponse     getAuthorizationTokenResponse;
+        public getAccountResponse                getAccountResponse;
+        public getInterfaceResponse              getInterfaceResponse;
         public getPriceResponse    getPriceResponse;
         public getPositionResponse getPositionResponse;
         public getOrderResponse    getOrderResponse;
@@ -108,6 +112,36 @@ public class ArthikaHFT {
     public static class getAuthorizationTokenResponse {
         public String        token;
         public String        timestamp;
+    }
+
+    public static class getAccountRequest {
+        public String        user;
+        public String        token;
+
+        public getAccountRequest( String user, String token ) {
+            this.user = user;
+            this.token = token;
+        }
+    }
+
+    public static class getAccountResponse {
+        public List<accountTick>    account;
+        public String               timestamp;
+    }
+
+    public static class getInterfaceRequest {
+        public String        user;
+        public String        token;
+
+        public getInterfaceRequest( String user, String token ) {
+            this.user = user;
+            this.token = token;
+        }
+    }
+
+    public static class getInterfaceResponse {
+        public List<tinterfaceTick> tinterface;
+        public String               timestamp;
     }
 
     public static class getPriceRequest {
@@ -248,6 +282,22 @@ public class ArthikaHFT {
         public String           timestamp;
     }
 
+    public static class accountTick {
+        public String        name;
+        public String        description;
+        public String        style;
+        public int           leverage;
+        public String        rollover;
+        public String        settlement;
+    }
+
+    public static class tinterfaceTick {
+        public String        name;
+        public String        description;
+        public String        account;
+        public String        commissions;
+    }
+
     public static class priceTick {
         public String  security;
         public String  tinterface;
@@ -362,6 +412,8 @@ public class ArthikaHFT {
 
         private ObjectMapper mapper;
         private boolean stream = true;
+        private List<accountTick> accountTickList = new ArrayList<accountTick>();
+        private List<tinterfaceTick> tinterfaceTickList = new ArrayList<tinterfaceTick>();
         private List<priceTick> priceTickList = new ArrayList<priceTick>();
         private accountingTick accountingTick = new accountingTick();
         private List<assetPositionTick> assetPositionTickList = new ArrayList<assetPositionTick>();
@@ -376,15 +428,27 @@ public class ArthikaHFT {
             this.mapper = mapper;
         }
 
+        public List<accountTick> getAccountTickList(){
+            return accountTickList;
+        }
+
+        public List<tinterfaceTick> getTinterfaceTickList(){
+            return tinterfaceTickList;
+        }
+
         public List<priceTick> getPriceTickList(){
             return priceTickList;
+        }
+
+        public accountingTick accountingTick(){
+            return accountingTick;
         }
 
         public List<assetPositionTick> getAssetPositionTickList(){
             return assetPositionTickList;
         }
 
-        public List<securityPositionTick> getSecurityPositionTickList(){
+        public List<securityPositionTick> getSecurityPositionTickList() {
             return securityPositionTickList;
         }
 
@@ -444,6 +508,20 @@ public class ArthikaHFT {
                             return null;
                         }
 
+                        if (response.getAccountResponse!=null){
+                            if (response.getAccountResponse.account != null){
+                                for (accountTick tick : response.getAccountResponse.account){
+                                    accountTickList.add(tick);
+                                }
+                            }
+                        }
+                        if (response.getInterfaceResponse!=null){
+                            if (response.getInterfaceResponse.tinterface != null){
+                                for (tinterfaceTick tick : response.getInterfaceResponse.tinterface){
+                                    tinterfaceTickList.add(tick);
+                                }
+                            }
+                        }
                         if (response.getPriceResponse!=null){
                             if(this.stream){
                                 if (response.getPriceResponse.timestamp != null){
@@ -659,6 +737,22 @@ public class ArthikaHFT {
         }
     }
 
+    public List<accountTick> getAccount() throws IOException, InterruptedException {
+        hftRequest hftrequest = new hftRequest();
+        hftrequest.getAccount = new getAccountRequest(user, token);
+        myResponseHandler responseHandler = new myResponseHandler();
+        sendRequest(hftrequest, responseHandler, "/getAccount", false, null);
+        return responseHandler.getAccountTickList();
+    }
+
+    public List<tinterfaceTick> getInterface() throws IOException, InterruptedException {
+        hftRequest hftrequest = new hftRequest();
+        hftrequest.getInterface = new getInterfaceRequest(user, token);
+        myResponseHandler responseHandler = new myResponseHandler();
+        sendRequest(hftrequest, responseHandler, "/getInterface", false, null);
+        return responseHandler.getTinterfaceTickList();
+    }
+
     public List<priceTick> getPrice(List<String> securities, List<String> tinterfaces, String granularity, int levels) throws IOException, InterruptedException {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getPrice = new getPriceRequest(user, token, securities, tinterfaces, granularity, levels, 0);
@@ -684,8 +778,8 @@ public class ArthikaHFT {
         myResponseHandler responseHandler = new myResponseHandler();
         sendRequest(hftrequest, responseHandler, "/getPosition", false, null);
         positionTick positiontick = new positionTick();
-        positiontick.assetPositionTickList = responseHandler.assetPositionTickList;
-        positiontick.securityPositionTickList = responseHandler.securityPositionTickList;
+        positiontick.assetPositionTickList = responseHandler.getAssetPositionTickList();
+        positiontick.securityPositionTickList = responseHandler.getSecurityPositionTickList();
         return positiontick;
     }
 
