@@ -11,130 +11,217 @@
         android:orientation="vertical">
 
         <LinearLayout
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:background="@drawable/border">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/Accounting"
+                    android:id="@+id/accountingTextView" />
+
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/Equity"
+                    android:id="@+id/equityButton"
+                    android:layout_weight="0.5" />
+
+            </LinearLayout>
+
+            <GridView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="@string/Accounting"
-                android:id="@+id/accountingTextView" />
+                android:id="@+id/accountingHeaderGridView"
+                android:textFilterEnabled="false"
+                android:clickable="false"
+                android:drawSelectorOnTop="false"
+                android:scrollingCache="false"
+                android:padding="0dp"
+                android:paddingLeft="0dp"
+                android:paddingTop="0dp"
+                android:paddingRight="0dp"
+                android:paddingBottom="0dp"
+                android:paddingEnd="0dp"
+                android:paddingStart="0dp"
+                android:verticalSpacing="0dp"
+                android:horizontalSpacing="0dp"
+                android:gravity="fill_horizontal" />
 
-            <Button
-                android:layout_width="0dp"
+            <GridView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/Equity"
-                android:id="@+id/equityButton"
-                android:layout_weight="0.5" />
-
+                android:id="@+id/accountingGridView"
+                android:textFilterEnabled="false"
+                android:clickable="false"
+                android:drawSelectorOnTop="false"
+                android:scrollingCache="false"
+                android:padding="0dp"
+                android:paddingLeft="0dp"
+                android:paddingTop="0dp"
+                android:paddingRight="0dp"
+                android:paddingBottom="0dp"
+                android:paddingEnd="0dp"
+                android:paddingStart="0dp"
+                android:verticalSpacing="0dp"
+                android:horizontalSpacing="0dp"
+                android:gravity="fill_horizontal"
+                android:nestedScrollingEnabled="false" />
         </LinearLayout>
 
-        <GridView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/accountingHeaderGridView"
-            android:textFilterEnabled="false"
-            android:clickable="false"
-            android:drawSelectorOnTop="false"
-            android:scrollingCache="true"
-            android:padding="0dp"
-            android:paddingLeft="0dp"
-            android:paddingTop="0dp"
-            android:paddingRight="0dp"
-            android:paddingBottom="0dp"
-            android:paddingEnd="0dp"
-            android:paddingStart="0dp"
-            android:verticalSpacing="0dp"
-            android:horizontalSpacing="0dp"
-            android:gravity="fill_horizontal" />
-
-        <GridView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/accountingGridView"
-            android:textFilterEnabled="false"
-            android:clickable="false"
-            android:drawSelectorOnTop="false"
-            android:scrollingCache="true"
-            android:padding="0dp"
-            android:paddingLeft="0dp"
-            android:paddingTop="0dp"
-            android:paddingRight="0dp"
-            android:paddingBottom="0dp"
-            android:paddingEnd="0dp"
-            android:paddingStart="0dp"
-            android:verticalSpacing="0dp"
-            android:horizontalSpacing="0dp"
-            android:gravity="fill_horizontal"
-            android:nestedScrollingEnabled="true" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="@string/Positions"
-            android:id="@+id/positionsTextView" />
-
-        <GridView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/positionHeaderGridView"
-            android:textFilterEnabled="false"
-            android:clickable="false"
-            android:drawSelectorOnTop="false"
-            android:scrollingCache="true"
-            android:padding="0dp"
-            android:paddingLeft="0dp"
-            android:paddingTop="0dp"
-            android:paddingRight="0dp"
-            android:paddingBottom="0dp"
-            android:paddingEnd="0dp"
-            android:paddingStart="0dp"
-            android:verticalSpacing="0dp"
-            android:horizontalSpacing="0dp"
-            android:gravity="fill_horizontal" />
-
-        <GridView
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/positionGridView"
-            android:textFilterEnabled="false"
-            android:clickable="false"
-            android:drawSelectorOnTop="false"
-            android:scrollingCache="true"
             android:layout_weight="0.5"
-            android:padding="0dp"
-            android:paddingLeft="0dp"
-            android:paddingTop="0dp"
-            android:paddingRight="0dp"
-            android:paddingBottom="0dp"
-            android:paddingEnd="0dp"
-            android:paddingStart="0dp"
-            android:verticalSpacing="0dp"
-            android:horizontalSpacing="0dp"
-            android:gravity="fill_horizontal"
-            android:nestedScrollingEnabled="true" />
+            android:background="@drawable/border"
+            android:layout_marginTop="5dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="@string/Assets"
-            android:id="@+id/assetsTextView" />
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-        <GridView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/assetHeaderGridView" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/Positions"
+                    android:id="@+id/positionsTextView"
+                    android:layout_weight="0.3" />
 
-        <GridView
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/SelectAccount"
+                    android:id="@+id/selectAccountPositionTextView"
+                    android:layout_weight="0.3"
+                    android:gravity="right" />
+
+                <Spinner
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/accountPositionSpinner"
+                    android:layout_weight="0.3" />
+            </LinearLayout>
+
+            <GridView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/positionHeaderGridView"
+                android:textFilterEnabled="false"
+                android:clickable="false"
+                android:drawSelectorOnTop="false"
+                android:scrollingCache="false"
+                android:padding="0dp"
+                android:paddingLeft="0dp"
+                android:paddingTop="0dp"
+                android:paddingRight="0dp"
+                android:paddingBottom="0dp"
+                android:paddingEnd="0dp"
+                android:paddingStart="0dp"
+                android:verticalSpacing="0dp"
+                android:horizontalSpacing="0dp"
+                android:gravity="fill_horizontal" />
+
+            <GridView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/positionGridView"
+                android:textFilterEnabled="false"
+                android:clickable="false"
+                android:drawSelectorOnTop="false"
+                android:scrollingCache="true"
+                android:padding="0dp"
+                android:paddingLeft="0dp"
+                android:paddingTop="0dp"
+                android:paddingRight="0dp"
+                android:paddingBottom="0dp"
+                android:paddingEnd="0dp"
+                android:paddingStart="0dp"
+                android:verticalSpacing="0dp"
+                android:horizontalSpacing="0dp"
+                android:gravity="fill_horizontal"
+                android:nestedScrollingEnabled="true" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/assetGridView"
             android:layout_weight="0.5"
-            android:nestedScrollingEnabled="true" />
+            android:background="@drawable/border"
+            android:layout_marginTop="5dp">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/Assets"
+                    android:id="@+id/assetsTextView"
+                    android:layout_weight="0.3" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/SelectAccount"
+                    android:id="@+id/selectAccountAssetTextView"
+                    android:gravity="right"
+                    android:layout_weight="0.3" />
+
+                <Spinner
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/accountAssetSpinner"
+                    android:layout_weight="0.3" />
+
+            </LinearLayout>
+
+            <GridView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/assetHeaderGridView"
+                android:gravity="fill_horizontal"
+                android:horizontalSpacing="0dp"
+                android:padding="0dp"
+                android:paddingLeft="0dp"
+                android:paddingTop="0dp"
+                android:paddingRight="0dp"
+                android:paddingBottom="0dp"
+                android:paddingEnd="0dp"
+                android:paddingStart="0dp"
+                android:verticalSpacing="0dp" />
+
+            <GridView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/assetGridView"
+                android:nestedScrollingEnabled="true"
+                android:gravity="fill_horizontal"
+                android:horizontalSpacing="0dp"
+                android:scrollingCache="true"
+                android:padding="0dp"
+                android:paddingLeft="0dp"
+                android:paddingTop="0dp"
+                android:paddingRight="0dp"
+                android:paddingBottom="0dp"
+                android:paddingEnd="0dp"
+                android:paddingStart="0dp"
+                android:verticalSpacing="0dp" />
+        </LinearLayout>
 
     </LinearLayout>
 

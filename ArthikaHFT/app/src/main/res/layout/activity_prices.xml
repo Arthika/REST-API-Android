@@ -11,53 +11,68 @@
         android:layout_height="match_parent"
         android:weightSum="1">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/domainTextView" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/userTextView" />
-
         <LinearLayout
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:weightSum="1">
+            android:background="@drawable/border">
 
-            <Button
-                android:id = "@+id/startButton"
-                android:layout_width="wrap_content"
-                android:layout_height = "wrap_content"
-                android:gravity="center"
-                android:text="@string/Start"
-                android:enabled="false"
-                android:layout_weight="0.5">
-            </Button>
-
-            <Button
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/Stop"
-                android:id="@+id/stopButton"
-                android:layout_weight="0.5" />
+                android:id="@+id/domainTextView" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/userTextView" />
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:weightSum="1">
+
+                <Button
+                    android:id = "@+id/startButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height = "wrap_content"
+                    android:gravity="center"
+                    android:text="@string/Start"
+                    android:enabled="false"
+                    android:layout_weight="0.5">
+                </Button>
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/Stop"
+                    android:id="@+id/stopButton"
+                    android:layout_weight="0.5" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/updateTimeTextView" />
         </LinearLayout>
 
-        <TextView
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/updateTimeTextView" />
+            android:layout_height="match_parent"
+            android:background="@drawable/border"
+            android:layout_marginTop="5dp">
 
-        <GridView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/pricesGridView"
-            android:numColumns="3"
-            android:verticalSpacing="0dp"
-            android:horizontalSpacing="0dp" />
+            <GridView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/pricesGridView"
+                android:numColumns="3"
+                android:verticalSpacing="0dp"
+                android:horizontalSpacing="0dp" />
+        </LinearLayout>
 
     </LinearLayout>
 

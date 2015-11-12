@@ -114,6 +114,12 @@ public class SettingsPop extends Activity {
         for (int i=0; i<res.size(); i++){
             MainActivity.secsSelected.set(i,res.get(i));
         }
+        if (MainActivity.domain.equals(MainActivity.domainlist[0])){
+            MainActivity.ssl = true;
+        }
+        else{
+            MainActivity.ssl = false;
+        }
         MainActivity.refreshSettings();
     }
 

@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -56,6 +58,16 @@ public class PricePop extends Activity {
         timeIni = "";
 
         chart = (LineChart) findViewById(R.id.chart);
+
+        Button priceCloseButton = (Button) this.findViewById(R.id.priceCloseButton);
+        priceCloseButton.setText("CLOSE");
+
+        priceCloseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
 
     }
 

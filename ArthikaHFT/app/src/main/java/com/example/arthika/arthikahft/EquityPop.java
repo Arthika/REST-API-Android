@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -56,6 +58,16 @@ public class EquityPop extends Activity {
         equitystrategyChart = (LineChart) findViewById(R.id.equityStrategyChart);
         equitypoolChart = (LineChart) findViewById(R.id.equityPoolChart);
         myValueFormatter = new MyValueFormatter();
+
+        Button equityCloseButton = (Button) this.findViewById(R.id.equityCloseButton);
+        equityCloseButton.setText("CLOSE");
+
+        equityCloseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
 
     }
 

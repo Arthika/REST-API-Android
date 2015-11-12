@@ -80,9 +80,9 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
     public void accountingEvent(ArthikaHFT.accountingTick accountingTick) {
         synchronized(MainActivity.accountingArray) {
             if (EquityPop.equitystrategylist !=null) {
+                EquityPop.equityintervallist.add(MainActivity.updateTime);
                 EquityPop.equitystrategylist.add(accountingTick.strategyPL);
                 EquityPop.equitypoollist.add(accountingTick.totalequity);
-                EquityPop.equityintervallist.add(MainActivity.updateTime);
                 if (EquityPop.equityintervallist.size()> EquityPop.EQUITY_MAX_VALUES){
                     synchronized(EquityPop.equitystrategylist){
                         for (int i=0; i<10; i++){
@@ -118,10 +118,7 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                 String asset = tick.asset;
                 String account = tick.account;
                 if (account.equals("<AGGREGATED>")){
-                    account = "ALL";
-                }
-                else{
-                    continue;
+                    account = MainActivity.ALL;;
                 }
                 boolean found = false;
                 for (int i = 0; i < MainActivity.assetArray.size(); i = i + MainActivity.ASSET_COLUMNS) {
@@ -153,10 +150,7 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                 String security = tick.security;
                 String account = tick.account;
                 if (account.equals("<AGGREGATED>")){
-                    account = "ALL";
-                }
-                else{
-                    continue;
+                    account = MainActivity.ALL;
                 }
                 boolean found = false;
                 for (int i = 0; i < MainActivity.positionArray.size(); i = i + MainActivity.POSITION_COLUMNS) {
@@ -225,7 +219,7 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                         if (orderid.equals(MainActivity.pendingOrderArray.get(i))) {
                             MainActivity.pendingOrderArray.set(i + 1, tick.fixid);
                             MainActivity.pendingOrderArray.set(i + 2, tick.security);
-                            MainActivity.pendingOrderArray.set(i + 3, String.valueOf(tick.quantity));
+                            MainActivity.pendingOrderArray.set(i + 3, Utils.intToString(tick.quantity));
                             MainActivity.pendingOrderArray.set(i + 4, tick.side);
                             MainActivity.pendingOrderArray.set(i + 5, Utils.doubleToString(tick.limitprice, tick.pips));
                             System.out.println("Pending Order Modified");
@@ -237,12 +231,17 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                         MainActivity.pendingOrderArray.add(0, orderid);
                         MainActivity.pendingOrderArray.add(1, tick.fixid);
                         MainActivity.pendingOrderArray.add(2, tick.security);
-                        MainActivity.pendingOrderArray.add(3, String.valueOf(tick.quantity));
+                        MainActivity.pendingOrderArray.add(3, Utils.intToString(tick.quantity));
                         MainActivity.pendingOrderArray.add(4, tick.side);
                         MainActivity.pendingOrderArray.add(5, Utils.doubleToString(tick.limitprice, tick.pips));
                         MainActivity.pendingOrderArray.add(6, "Modify");
                         MainActivity.pendingOrderArray.add(7, "Cancel");
                         System.out.println("Pending Order Added");
+                        if (MainActivity.pendingOrderArray.size() > MainActivity.MAX_PENDING_ORDERS * MainActivity.PENDINGORDER_COLUMNS) {
+                            for (int j = 0; j < MainActivity.PENDINGORDER_COLUMNS; j++) {
+                                MainActivity.pendingOrderArray.remove(MainActivity.pendingOrderArray.size()-1);
+                            }
+                        }
                     }
                     MainActivity.pendingOrderChanged = true;
                 }
@@ -264,7 +263,7 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                     for (int i = 0; i < MainActivity.closedOrderArray.size(); i = i + MainActivity.CLOSEDORDER_COLUMNS) {
                         if (orderid.equals(MainActivity.closedOrderArray.get(i))) {
                             MainActivity.closedOrderArray.set(i + 1, tick.security);
-                            MainActivity.closedOrderArray.set(i + 2, String.valueOf(tick.finishedquantity));
+                            MainActivity.closedOrderArray.set(i + 2, Utils.intToString(tick.finishedquantity));
                             MainActivity.closedOrderArray.set(i + 3, tick.side);
                             MainActivity.closedOrderArray.set(i + 4, Utils.doubleToString(tick.finishedprice, tick.pips));
                             MainActivity.closedOrderArray.set(i + 5, tick.status);
@@ -276,11 +275,16 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                     if (!found) {
                         MainActivity.closedOrderArray.add(0, orderid);
                         MainActivity.closedOrderArray.add(1, tick.security);
-                        MainActivity.closedOrderArray.add(2, String.valueOf(tick.finishedquantity));
+                        MainActivity.closedOrderArray.add(2, Utils.intToString(tick.finishedquantity));
                         MainActivity.closedOrderArray.add(3, tick.side);
                         MainActivity.closedOrderArray.add(4, Utils.doubleToString(tick.finishedprice, tick.pips));
                         MainActivity.closedOrderArray.add(5, tick.status);
                         System.out.println("Order Added");
+                        if (MainActivity.closedOrderArray.size() > MainActivity.MAX_CLOSED_ORDERS * MainActivity.CLOSEDORDER_COLUMNS) {
+                            for (int j = 0; j < MainActivity.CLOSEDORDER_COLUMNS; j++) {
+                                MainActivity.closedOrderArray.remove(MainActivity.closedOrderArray.size()-1);
+                            }
+                        }
                     }
                     MainActivity.closedOrderChanged = true;
                 }

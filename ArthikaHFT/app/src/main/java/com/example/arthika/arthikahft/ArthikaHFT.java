@@ -22,11 +22,24 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 interface ArthikaHFTPriceListener {
     void timestampEvent(String timestamp);
@@ -43,6 +56,7 @@ interface ArthikaHFTPriceListener {
 
 public class ArthikaHFT {
 
+    private boolean ssl;
     private String domain;
     private String url_stream;
     private String url_polling;
@@ -52,10 +66,31 @@ public class ArthikaHFT {
     private String password;
     private String authentication_port;
     private String request_port;
+    private String ssl_cert;
     public String challenge;
     private String token = null;
-    private static int interval;
+    SSLContext sslContext = null;
+
     private HashMap<ThreadExecution,myResponseHandler> threadmap;
+
+    public static final String SIDE_BUY = "buy";
+    public static final String SIDE_SELL = "sell";
+    public static final String TYPE_MARKET = "market";
+    public static final String TYPE_LIMIT = "limit";
+    public static final String VALIDITY_DAY = "day";
+    public static final String VALIDITY_FILLORKILL = "fill or kill";
+    public static final String VALIDITY_INMEDIATEORCANCEL = "inmediate or cancel";
+    public static final String VALIDITY_GOODTILLCANCEL = "good till cancel";
+    public static final String GRANULARITY_TOB = "tob";
+    //public static final String GRANULARITY_FAB = "fab";
+
+    /*
+    public static final String ORDERTYPE_PENDING = "pending";
+    public static final String ORDERTYPE_INDETERMINATED = "indetermined";
+    public static final String ORDERTYPE_EXECUTED = "executed";
+    public static final String ORDERTYPE_CANCELED = "canceled";
+    public static final String ORDERTYPE_REJECTED = "rejected";
+    */
 
     public static class hftRequest {
         public getAuthorizationChallengeRequest getAuthorizationChallenge;
@@ -390,6 +425,7 @@ public class ArthikaHFT {
     public static class positionTick {
         public List<assetPositionTick> assetPositionTickList;
         public List<securityPositionTick> securityPositionTickList;
+        public accountingTick accountingTick;
     }
 
     public static class cancelTick {
@@ -440,7 +476,7 @@ public class ArthikaHFT {
             return priceTickList;
         }
 
-        public accountingTick accountingTick(){
+        public accountingTick getAccountingTick(){
             return accountingTick;
         }
 
@@ -664,7 +700,7 @@ public class ArthikaHFT {
 
     }
 
-    public ArthikaHFT(String domain, String url_stream, String url_polling, String url_challenge, String url_token, String user, String password, String authentication_port, String request_port){
+    public ArthikaHFT(String domain, String url_stream, String url_polling, String url_challenge, String url_token, String user, String password, String authentication_port, String request_port, boolean ssl, String ssl_cert){
         this.token = null;
         this.domain = domain;
         this.url_stream = url_stream;
@@ -675,6 +711,8 @@ public class ArthikaHFT {
         this.password = password;
         this.authentication_port = authentication_port;
         this.request_port = request_port;
+        this.ssl = ssl;
+        this.ssl_cert = ssl_cert;
         init();
     }
 
@@ -682,13 +720,34 @@ public class ArthikaHFT {
         threadmap = new HashMap<ThreadExecution,myResponseHandler>();
     }
 
-    public void doAuthentication() throws IOException, InterruptedException, DecoderException {
+    public void doAuthentication() throws IOException, InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, DecoderException {
         myResponseHandler responseHandler = new myResponseHandler();
         final ObjectMapper mapper = new ObjectMapper();
         List<Header> headers = new ArrayList<Header>();
         headers.add(new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"));
         headers.add(new BasicHeader(HttpHeaders.ACCEPT, "application/json"));
-        CloseableHttpClient client = HttpClients.custom().setDefaultHeaders(headers).build();
+        CloseableHttpClient client=null;
+        if (ssl){
+            // get certificate
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            URL url = new URL(ssl_cert);
+            URLConnection connection = url.openConnection();
+            InputStream in = connection.getInputStream();
+            Certificate cert = cf.generateCertificate(in);
+            //System.out.println("Cert:\n===================\n" + cert.getPublicKey().toString() + "\n");
+            in.close();
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+            ks.load(null); // You don't need the KeyStore instance to come from a file.
+            ks.setCertificateEntry("cert", cert);
+            tmf.init(ks);
+            sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, tmf.getTrustManagers(), null);
+            client = HttpClients.custom().setSslcontext(sslContext).setDefaultHeaders(headers).build();
+        }
+        else{
+            client = HttpClients.custom().setDefaultHeaders(headers).build();
+        }
 
         try{
             hftRequest hftrequest;
@@ -737,7 +796,7 @@ public class ArthikaHFT {
         }
     }
 
-    public List<accountTick> getAccount() throws IOException, InterruptedException {
+    public List<accountTick> getAccount() throws IOException, InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getAccount = new getAccountRequest(user, token);
         myResponseHandler responseHandler = new myResponseHandler();
@@ -745,7 +804,7 @@ public class ArthikaHFT {
         return responseHandler.getAccountTickList();
     }
 
-    public List<tinterfaceTick> getInterface() throws IOException, InterruptedException {
+    public List<tinterfaceTick> getInterface() throws IOException, InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getInterface = new getInterfaceRequest(user, token);
         myResponseHandler responseHandler = new myResponseHandler();
@@ -753,7 +812,7 @@ public class ArthikaHFT {
         return responseHandler.getTinterfaceTickList();
     }
 
-    public List<priceTick> getPrice(List<String> securities, List<String> tinterfaces, String granularity, int levels) throws IOException, InterruptedException {
+    public List<priceTick> getPrice(List<String> securities, List<String> tinterfaces, String granularity, int levels) throws IOException, InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getPrice = new getPriceRequest(user, token, securities, tinterfaces, granularity, levels, 0);
         myResponseHandler responseHandler = new myResponseHandler();
@@ -761,7 +820,7 @@ public class ArthikaHFT {
         return responseHandler.getPriceTickList();
     }
 
-    public long getPriceBegin(List<String> securities, List<String> tinterfaces, String granularity, int levels, int interval, ArthikaHFTPriceListener listener ) throws IOException, InterruptedException {
+    public long getPriceBegin(List<String> securities, List<String> tinterfaces, String granularity, int levels, int interval, ArthikaHFTPriceListener listener ) throws IOException, InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getPrice = new getPriceRequest(user, token, securities, tinterfaces, granularity, levels, interval);
         myResponseHandler responseHandler = new myResponseHandler();
@@ -772,7 +831,7 @@ public class ArthikaHFT {
         return finishStreaming(threadid);
     }
 
-    public positionTick getPosition(List<String> assets, List<String> securities, List<String> accounts) throws IOException, InterruptedException {
+    public positionTick getPosition(List<String> assets, List<String> securities, List<String> accounts) throws IOException, InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getPosition = new getPositionRequest(user, token, assets, securities, accounts, 0);
         myResponseHandler responseHandler = new myResponseHandler();
@@ -780,10 +839,11 @@ public class ArthikaHFT {
         positionTick positiontick = new positionTick();
         positiontick.assetPositionTickList = responseHandler.getAssetPositionTickList();
         positiontick.securityPositionTickList = responseHandler.getSecurityPositionTickList();
+        positiontick.accountingTick = responseHandler.getAccountingTick();
         return positiontick;
     }
 
-    public long getPositionBegin(List<String> assets, List<String> securities, List<String> accounts, int interval, ArthikaHFTPriceListener listener ) throws IOException, InterruptedException {
+    public long getPositionBegin(List<String> assets, List<String> securities, List<String> accounts, int interval, ArthikaHFTPriceListener listener ) throws IOException, InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getPosition = new getPositionRequest(user, token, assets, securities, accounts, interval);
         myResponseHandler responseHandler = new myResponseHandler();
@@ -795,7 +855,7 @@ public class ArthikaHFT {
         return finishStreaming(threadid);
     }
 
-    public List<orderTick> getOrder(List<String> securities, List<String> tinterfaces, List<String> types) throws IOException, InterruptedException {
+    public List<orderTick> getOrder(List<String> securities, List<String> tinterfaces, List<String> types) throws IOException, InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getOrder = new getOrderRequest(user, token, securities, tinterfaces, types, 0);
         myResponseHandler responseHandler = new myResponseHandler();
@@ -803,7 +863,7 @@ public class ArthikaHFT {
         return responseHandler.getOrderTickList();
     }
 
-    public long getOrderBegin(List<String> securities, List<String> tinterfaces, List<String> types, int interval, ArthikaHFTPriceListener listener ) throws IOException, InterruptedException {
+    public long getOrderBegin(List<String> securities, List<String> tinterfaces, List<String> types, int interval, ArthikaHFTPriceListener listener ) throws IOException, InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         hftRequest hftrequest = new hftRequest();
         hftrequest.getOrder = new getOrderRequest(user, token, securities, tinterfaces, types, interval);
         myResponseHandler responseHandler = new myResponseHandler();
@@ -814,7 +874,7 @@ public class ArthikaHFT {
         return finishStreaming(threadid);
     }
 
-    public List<orderRequest> setOrder(List<orderRequest> orders) throws IOException, InterruptedException {
+    public List<orderRequest> setOrder(List<orderRequest> orders) throws IOException, InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         hftRequest hftrequest = new hftRequest();
         hftrequest.setOrder = new setOrderRequest(user, token, orders);
         myResponseHandler responseHandler = new myResponseHandler();
@@ -822,7 +882,7 @@ public class ArthikaHFT {
         return responseHandler.getOrderList();
     }
 
-    public List<cancelTick> cancelOrder(List<String> orders) throws IOException, InterruptedException {
+    public List<cancelTick> cancelOrder(List<String> orders) throws IOException, InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         hftRequest hftrequest = new hftRequest();
         hftrequest.cancelOrder = new cancelOrderRequest(user, token, orders);
         myResponseHandler responseHandler = new myResponseHandler();
@@ -830,7 +890,7 @@ public class ArthikaHFT {
         return responseHandler.getCancelList();
     }
 
-    public List<modifyTick> modifyOrder(List<modOrder> orders) throws IOException, InterruptedException {
+    public List<modifyTick> modifyOrder(List<modOrder> orders) throws IOException, InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         hftRequest hftrequest = new hftRequest();
         hftrequest.modifyOrder = new modifyOrderRequest(user, token, orders);
         myResponseHandler responseHandler = new myResponseHandler();
@@ -838,9 +898,8 @@ public class ArthikaHFT {
         return responseHandler.getModifyList();
     }
 
-    private long sendRequest(hftRequest hftrequest, myResponseHandler responseHandler, String urlpath, boolean stream, ArthikaHFTPriceListener listener) throws IOException, InterruptedException {
+    private long sendRequest(hftRequest hftrequest, myResponseHandler responseHandler, String urlpath, boolean stream, ArthikaHFTPriceListener listener) throws IOException, InterruptedException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         if (token==null){
-            // TODO error
             return -1;
         }
 
@@ -848,7 +907,13 @@ public class ArthikaHFT {
         List<Header> headers = new ArrayList<Header>();
         headers.add(new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"));
         headers.add(new BasicHeader(HttpHeaders.ACCEPT, "application/json"));
-        CloseableHttpClient client = HttpClients.custom().setDefaultHeaders(headers).build();
+        CloseableHttpClient client=null;
+        if (ssl){
+            client = HttpClients.custom().setSslcontext(sslContext).setDefaultHeaders(headers).build();
+        }
+        else{
+            client = HttpClients.custom().setDefaultHeaders(headers).build();
+        }
 
         mapper.setSerializationInclusion(Inclusion.NON_NULL);
         mapper.configure(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);

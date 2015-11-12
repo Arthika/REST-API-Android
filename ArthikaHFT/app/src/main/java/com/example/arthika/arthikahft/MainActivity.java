@@ -21,11 +21,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
-import org.apache.commons.codec.DecoderException;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -50,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
      */
     ViewPager mViewPager;
 
+    public static boolean ssl;
     public static ArthikaHFT wrapper;
     public static String[] domainlist;
     public static String domain;
@@ -63,6 +62,10 @@ public class MainActivity extends AppCompatActivity {
     public static String request_port;
     public static int interval;
 
+    public static String ssl_authentication_port;
+    public static String ssl_request_port;
+    public static String ssl_cert;
+
     static int width;
     static boolean started;
     static long priceStreamingId;
@@ -72,9 +75,9 @@ public class MainActivity extends AppCompatActivity {
     static List<String> secs;
     static String[] secsAll;
     static List<Boolean> secsSelected;
-    static String[] TIlist;
-    static String[] accountlist;
-    static Integer[] amountlist;
+    static List<String> TIlist;
+    static List<String> accountlist;
+    static String[] amountlist;
     static String[] typelist;
     static String[] validitylist;
     static Integer[] intervallist;
@@ -84,16 +87,22 @@ public class MainActivity extends AppCompatActivity {
     static Timer timer;
     static MyTimerTask myTimerTask;
     static final List<String> pendingOrderArray = new ArrayList<String>();
+    static final List<String> pendingOrderArraycopy = new ArrayList<String>();
     static final List<String> closedOrderArray = new ArrayList<String>();
     static String[] accountingArray;
     static final List<String> positionArray = new ArrayList<String>();
     static final List<String> assetArray = new ArrayList<String>();
+    static final List<String> positionShowArray = new ArrayList<String>();
+    static final List<String> assetShowArray = new ArrayList<String>();
     static boolean pendingOrderChanged;
     static boolean closedOrderChanged;
     static boolean accountingChanged;
+    static String positionAccountSelected;
+    static String assetAccountSelected;
     static boolean positionChanged;
     static boolean assetChanged;
 
+    public static final String ALL = "ALL";
     public static final int DEFAULT_PAD = 16;
     public static final int PRICE_COLUMNS = 3;
     public static final int PENDINGORDER_COLUMNS = 8;
@@ -101,7 +110,8 @@ public class MainActivity extends AppCompatActivity {
     public static final int ACCOUNTING_COLUMNS = 4;
     public static final int POSITION_COLUMNS = 5;
     public static final int ASSET_COLUMNS = 4;
-    public static final int MAX_CLOSED_ORDERS = 20;
+    public static final int MAX_PENDING_ORDERS = 50;
+    public static final int MAX_CLOSED_ORDERS = 50;
     private static final int REFRESH_TIME = 100;
 
     @Override
@@ -124,10 +134,10 @@ public class MainActivity extends AppCompatActivity {
         // get properties from file
         getProperties();
 
-        domainlist = new String[]{"http://demo.arthikatrading.com", "http://production.koiosinvestments.com"};
-
+        domainlist = new String[]{"https://demo.arthikatrading.com", "http://demo.arthikatrading.com", "http://production.koiosinvestments.com"};
+        domain = domainlist[0];
         started = false;
-
+        ssl=true;
         updateTime = "";
 
         secsAll = new String[]{"EUR_USD", "EUR_GBP", "GBP_USD", "USD_JPY", "EUR_JPY", "GBP_JPY", "AUD_USD", "USD_CAD"};
@@ -137,9 +147,14 @@ public class MainActivity extends AppCompatActivity {
             secsSelected.add(true);
         }
         accountingArray = new String[4];
-        amountlist = new Integer[]{100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000};
-        typelist = new String[]{"market", "limit"};
-        validitylist = new String[]{"fill or kill", "day", "good till cancel", "inmediate or cancel"};
+        accountlist = new ArrayList<String>();
+        accountlist.add(ALL);
+        TIlist = new ArrayList<String>();
+        positionAccountSelected = MainActivity.ALL;
+        assetAccountSelected = MainActivity.ALL;
+        amountlist = new String[]{"100K", "200K", "500K", "1M", "2M", "5M", "10M"};
+        typelist = new String[]{ArthikaHFT.TYPE_MARKET, ArthikaHFT.TYPE_LIMIT};
+        validitylist = new String[]{ArthikaHFT.VALIDITY_FILLORKILL, ArthikaHFT.VALIDITY_DAY, ArthikaHFT.VALIDITY_GOODTILLCANCEL, ArthikaHFT.VALIDITY_INMEDIATEORCANCEL};
         intervallist = new Integer[]{0, 100, 200, 500, 1000, 2000, 5000, 10000};
         EquityPop.equitystrategylist = new ArrayList<Double>();
         EquityPop.equitypoollist = new ArrayList<Double>();
@@ -209,18 +224,29 @@ public class MainActivity extends AppCompatActivity {
         Properties prop = new Properties();
         InputStream input = null;
         try {
-            input = new FileInputStream("config.properties");
-            prop.load(input);
-            domain = prop.getProperty("domain");
-            url_stream = prop.getProperty("url-stream");
-            url_polling = prop.getProperty("url-polling");
-            url_challenge = prop.getProperty("url-challenge");
-            url_token = prop.getProperty("url-token");
-            user = prop.getProperty("user");
-            password = prop.getProperty("password");
-            authentication_port = prop.getProperty("authentication-port");
-            request_port = prop.getProperty("request-port");
-        }
+			input = new FileInputStream("config.properties");
+			prop.load(input);
+			url_stream = prop.getProperty("url-stream");
+			url_polling = prop.getProperty("url-polling");
+			url_challenge = prop.getProperty("url-challenge");
+			url_token = prop.getProperty("url-token");
+			user = prop.getProperty("user");
+			password = prop.getProperty("password");
+			interval = Integer.parseInt(prop.getProperty("interval"));
+			if (ssl){
+				domain = prop.getProperty("ssl-domain");
+				authentication_port = prop.getProperty("ssl-authentication-port");
+				request_port = prop.getProperty("ssl-request-port");
+				ssl_cert = prop.getProperty("ssl-cert");
+			}
+			else{
+				domain = prop.getProperty("domain");
+				authentication_port = prop.getProperty("authentication-port");
+				request_port = prop.getProperty("request-port");
+			}
+			user = "jaime_api";
+			password = "jaime_api";
+		}
         catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -235,7 +261,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         */
-        domain="http://demo.arthikatrading.com";
         user="fedenice";
         password="fedenice";
         authentication_port="81";
@@ -247,6 +272,10 @@ public class MainActivity extends AppCompatActivity {
         interval=0;
         user="demo";
         password="demo";
+
+        ssl_authentication_port="8081";
+        ssl_request_port="8081";
+        ssl_cert="http://secure2.alphassl.com/cacert/gsalphasha2g2r1.crt";
     }
 
     public static void refreshSettings(){
@@ -276,7 +305,12 @@ public class MainActivity extends AppCompatActivity {
         prices[2] = "BID";
         PricesFragment.refreshSettingsText();
 
-        wrapper = new ArthikaHFT(domain, url_stream, url_polling, url_challenge, url_token, user, password, authentication_port, request_port);
+        if (ssl) {
+            wrapper = new ArthikaHFT(domain, url_stream, url_polling, url_challenge, url_token, user, password, ssl_authentication_port, ssl_request_port, ssl, ssl_cert);
+        }
+        else{
+            wrapper = new ArthikaHFT(domain, url_stream, url_polling, url_challenge, url_token, user, password, authentication_port, request_port, ssl, ssl_cert);
+        }
 
         clearData();
     }
@@ -288,6 +322,7 @@ public class MainActivity extends AppCompatActivity {
             prices[(i + 1) * PRICE_COLUMNS + 2] = Utils.doubleToString(0);
         }
         pendingOrderArray.clear();
+        pendingOrderArraycopy.clear();
         closedOrderArray.clear();
         EquityPop.equitystrategylist = new ArrayList<Double>();
         EquityPop.equitypoollist = new ArrayList<Double>();
@@ -298,11 +333,35 @@ public class MainActivity extends AppCompatActivity {
         accountingArray[3]=Utils.doubleToString(0);
         positionArray.clear();
         assetArray.clear();
+        positionShowArray.clear();
+        assetShowArray.clear();
         pendingOrderChanged = true;
         closedOrderChanged = true;
         accountingChanged = true;
         positionChanged = true;
         assetChanged = true;
+    }
+
+    private static void doAuthentication() {
+        new doAuthenticationConnection().execute();
+    }
+
+    private static class doAuthenticationConnection extends AsyncTask {
+
+        @Override
+        protected Object doInBackground(Object... arg0) {
+            doAuthenticationConnect();
+            return null;
+        }
+
+    }
+
+    private static void doAuthenticationConnect(){
+        try {
+            wrapper.doAuthentication();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static void getAccount() {
@@ -322,10 +381,38 @@ public class MainActivity extends AppCompatActivity {
     private static void getAccountConnect() {
         try {
             final List<ArthikaHFT.accountTick> accountTickList = wrapper.getAccount();
-            accountlist = new String[accountTickList.size()];
-            for (int i=0; i<accountTickList.size(); i++){
-                accountlist[i] = accountTickList.get(i).name;
+            accountlist.clear();
+            accountlist.add(ALL);
+            for (ArthikaHFT.accountTick tick : accountTickList){
+                accountlist.add(tick.name);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void closeStreaming() {
+        new closeStreamingConnection().execute();
+    }
+
+    private static class closeStreamingConnection extends AsyncTask {
+
+        @Override
+        protected Object doInBackground(Object... arg0) {
+            closeStreamingConnect();
+            return null;
+        }
+
+    }
+
+    private static void closeStreamingConnect() {
+        try {
+            System.out.println("Finishing :" + priceStreamingId);
+            wrapper.getPriceEnd(priceStreamingId);
+            System.out.println("Finishing :" + orderStreamingId);
+            wrapper.getOrderEnd(orderStreamingId);
+            System.out.println("Finishing :" + positionStreamingId);
+            wrapper.getPositionEnd(positionStreamingId);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -348,37 +435,11 @@ public class MainActivity extends AppCompatActivity {
     private static void getInterfaceConnect() {
         try {
             final List<ArthikaHFT.tinterfaceTick> tinterfaceTickList = wrapper.getInterface();
-            TIlist = new String[tinterfaceTickList.size()];
-            for (int i=0; i<tinterfaceTickList.size(); i++){
-                TIlist[i] = tinterfaceTickList.get(i).name;
+            TIlist.clear();
+            for (ArthikaHFT.tinterfaceTick tick : tinterfaceTickList){
+                TIlist.add(tick.name);
             }
         } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void doAuthentication() {
-        new doAuthenticationConnection().execute();
-    }
-
-    private static class doAuthenticationConnection extends AsyncTask {
-
-        @Override
-        protected Object doInBackground(Object... arg0) {
-            doAuthenticationConnect();
-            return null;
-        }
-
-    }
-
-    private static void doAuthenticationConnect() {
-        try {
-            wrapper.doAuthentication();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (DecoderException e) {
             e.printStackTrace();
         }
     }
@@ -398,13 +459,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void cancelOrderConnect() {
-        String fixid = pendingOrderArray.get(OrderFragment.cellSelected - 6);
-
+        String fixid = pendingOrderArraycopy.get(OrderFragment.cellSelected - 6);
         try {
             wrapper.cancelOrder(Arrays.asList(fixid));
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -436,24 +494,33 @@ public class MainActivity extends AppCompatActivity {
                     if (OrderFragment.pendingOrderGridView!=null) {
                         if (pendingOrderChanged) {
                             pendingOrderChanged = false;
-                            synchronized (pendingOrderArray) {
+                            synchronized(pendingOrderArray){
+                                pendingOrderArraycopy.clear();
+                                for (String item : pendingOrderArray){
+                                    pendingOrderArraycopy.add(item);
+                                }
+                            }
+                            try {
                                 ArrayAdapter pendingOrderAdapter = (ArrayAdapter) OrderFragment.pendingOrderGridView.getAdapter();
                                 pendingOrderAdapter.notifyDataSetChanged();
                                 OrderFragment.pendingOrderGridView.setAdapter(pendingOrderAdapter);
+                            }
+                            catch (Exception ex){
+                                ex.printStackTrace();
                             }
                         }
 
                         if (closedOrderChanged) {
                             closedOrderChanged = false;
                             synchronized (closedOrderArray) {
-                                if (closedOrderArray.size() > MAX_CLOSED_ORDERS * CLOSEDORDER_COLUMNS) {
-                                    for (int j = 0; j < CLOSEDORDER_COLUMNS; j++) {
-                                        closedOrderArray.remove(closedOrderArray.size() - 1);
-                                    }
+                                try{
+                                    ArrayAdapter closedOrderAdapter = (ArrayAdapter) OrderFragment.closedOrderGridView.getAdapter();
+                                    closedOrderAdapter.notifyDataSetChanged();
+                                    OrderFragment.closedOrderGridView.setAdapter(closedOrderAdapter);
                                 }
-                                ArrayAdapter closedOrderAdapter = (ArrayAdapter) OrderFragment.closedOrderGridView.getAdapter();
-                                closedOrderAdapter.notifyDataSetChanged();
-                                OrderFragment.closedOrderGridView.setAdapter(closedOrderAdapter);
+                                catch (Exception ex){
+                                    ex.printStackTrace();
+                                }
                             }
                         }
                     }
@@ -473,6 +540,14 @@ public class MainActivity extends AppCompatActivity {
                         if (positionChanged) {
                             positionChanged = false;
                             synchronized (positionArray) {
+                                positionShowArray.clear();
+                                for (int i = 0; i < positionArray.size(); i = i + POSITION_COLUMNS){
+                                    if (positionAccountSelected.equals(positionArray.get(i + 1))) {
+                                        for (int j=0; j<POSITION_COLUMNS; j++){
+                                            positionShowArray.add(positionArray.get(i + j));
+                                        }
+                                    }
+                                }
                                 ArrayAdapter positionAdapter = (ArrayAdapter) PositionFragment.positionGridView.getAdapter();
                                 positionAdapter.notifyDataSetChanged();
                                 PositionFragment.positionGridView.setAdapter(positionAdapter);
@@ -482,6 +557,14 @@ public class MainActivity extends AppCompatActivity {
                         if (assetChanged) {
                             assetChanged = false;
                             synchronized (assetArray) {
+                                assetShowArray.clear();
+                                for (int i = 0; i < assetArray.size(); i = i + ASSET_COLUMNS){
+                                    if (assetAccountSelected.equals(assetArray.get(i + 1))) {
+                                        for (int j=0; j<ASSET_COLUMNS; j++){
+                                            assetShowArray.add(assetArray.get(i + j));
+                                        }
+                                    }
+                                }
                                 ArrayAdapter assetAdapter = (ArrayAdapter) PositionFragment.assetGridView.getAdapter();
                                 assetAdapter.notifyDataSetChanged();
                                 PositionFragment.assetGridView.setAdapter(assetAdapter);
@@ -604,7 +687,7 @@ public class MainActivity extends AppCompatActivity {
                         getAccount();
                         getInterface();
 
-                        priceStreamingId = wrapper.getPriceBegin(secs, null, "tob", 1, interval, new ArthikaHFTPriceListenerImp());
+                        priceStreamingId = wrapper.getPriceBegin(secs, null, ArthikaHFT.GRANULARITY_TOB, 1, interval, new ArthikaHFTPriceListenerImp());
                         System.out.println("Starting :" + priceStreamingId);
                         orderStreamingId = wrapper.getOrderBegin(null, null, null, interval, new ArthikaHFTPriceListenerImp());
                         System.out.println("Starting :" + orderStreamingId);
@@ -635,12 +718,7 @@ public class MainActivity extends AppCompatActivity {
                     stopButton.setEnabled(false);
                     updateTimeTextView.setText("Streaming stopped");
                     try {
-                        System.out.println("Finishing :" + priceStreamingId);
-                        wrapper.getPriceEnd(priceStreamingId);
-                        System.out.println("Finishing :" + orderStreamingId);
-                        wrapper.getOrderEnd(orderStreamingId);
-                        System.out.println("Finishing :" + positionStreamingId);
-                        wrapper.getPositionEnd(positionStreamingId);
+                        closeStreaming();
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -662,13 +740,13 @@ public class MainActivity extends AppCompatActivity {
                         if ((cellSelected % PRICE_COLUMNS) == 1) {
                             startActivity(new Intent(v.getContext(), TradePop.class));
                             TradePop.securitySelected = prices[cellSelected-1];
-                            TradePop.side = "buy";
+                            TradePop.side = ArthikaHFT.SIDE_BUY;
                             TradePop.price = prices[cellSelected];
                         }
                         if ((cellSelected % PRICE_COLUMNS) == 2) {
                             startActivity(new Intent(v.getContext(), TradePop.class));
                             TradePop.securitySelected = prices[cellSelected-2];
-                            TradePop.side = "sell";
+                            TradePop.side = ArthikaHFT.SIDE_SELL;
                             TradePop.price = prices[cellSelected];
                         }
                     }
@@ -751,8 +829,8 @@ public class MainActivity extends AppCompatActivity {
 
             pendingOrderGridView = (GridView) view.findViewById(R.id.pendingOrderGridView);
             pendingOrderGridView.setNumColumns(PENDINGORDER_COLUMNS);
-            pendingOrderGridView.setPadding(-((width - 6 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 2))*2, 0, 0, 0);
-            ArrayAdapter<String> pendingOrderAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridview_format, pendingOrderArray);
+            pendingOrderGridView.setPadding(-((width - 6 * DEFAULT_PAD) / (PENDINGORDER_COLUMNS - 2)) * 2, 0, 0, 0);
+            ArrayAdapter<String> pendingOrderAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridview_format, pendingOrderArraycopy);
             pendingOrderAdapter.notifyDataSetChanged();
             pendingOrderGridView.setAdapter(pendingOrderAdapter);
 
@@ -780,26 +858,33 @@ public class MainActivity extends AppCompatActivity {
             pendingOrderGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
-                    if (!started){
+                    if (!started) {
                         return;
                     }
-                    cellSelected = position;
-                    System.out.println("selected " + cellSelected);
-                    if ((cellSelected % PENDINGORDER_COLUMNS) == (PENDINGORDER_COLUMNS - 2)) {
-                        System.out.println("modify " + pendingOrderArray.get(cellSelected - 5));
-                        startActivity(new Intent(v.getContext(), TradeModifyPop.class));
-                        TradeModifyPop.fixidSelected = pendingOrderArray.get(cellSelected - 5);
-                        TradeModifyPop.securitySelected = pendingOrderArray.get(cellSelected - 4);
-                        TradeModifyPop.amount = Integer.parseInt(pendingOrderArray.get(cellSelected - 3));
-                        TradeModifyPop.side = pendingOrderArray.get(cellSelected - 2);
-                        TradeModifyPop.price = pendingOrderArray.get(cellSelected - 1);
-                    }
-                    if ((cellSelected % PENDINGORDER_COLUMNS) == (PENDINGORDER_COLUMNS - 1)) {
-                        System.out.println("cancel " + pendingOrderArray.get(cellSelected - 6));
-                        String alertMessage = "Do you want to cancel order " + pendingOrderArray.get(cellSelected - 3) + " " + pendingOrderArray.get(cellSelected - 4) + " " + pendingOrderArray.get(cellSelected - 5) + " at " + pendingOrderArray.get(cellSelected - 2) + "?";
-                        alertOrder.setMessage(alertMessage);
-                        alertOrder.show();
-                    }
+                    //synchronized (pendingOrderArray) {
+                        try {
+                            cellSelected = position;
+                            System.out.println("selected " + cellSelected);
+                            if ((cellSelected % PENDINGORDER_COLUMNS) == (PENDINGORDER_COLUMNS - 2)) {
+                                System.out.println("modify " + pendingOrderArraycopy.get(cellSelected - 5));
+                                startActivity(new Intent(v.getContext(), TradeModifyPop.class));
+                                TradeModifyPop.fixidSelected = pendingOrderArraycopy.get(cellSelected - 5);
+                                TradeModifyPop.securitySelected = pendingOrderArraycopy.get(cellSelected - 4);
+                                TradeModifyPop.amountString = pendingOrderArraycopy.get(cellSelected - 3);
+                                TradeModifyPop.side = pendingOrderArraycopy.get(cellSelected - 2);
+                                TradeModifyPop.price = pendingOrderArraycopy.get(cellSelected - 1);
+                            }
+                            if ((cellSelected % PENDINGORDER_COLUMNS) == (PENDINGORDER_COLUMNS - 1)) {
+                                System.out.println("cancel " + pendingOrderArraycopy.get(cellSelected - 6));
+                                String alertMessage = "Do you want to cancel order " + pendingOrderArraycopy.get(cellSelected - 3) + " " + pendingOrderArraycopy.get(cellSelected - 4) + " " + pendingOrderArraycopy.get(cellSelected - 5) + " at " + pendingOrderArraycopy.get(cellSelected - 2) + "?";
+                                alertOrder.setMessage(alertMessage);
+                                alertOrder.show();
+                            }
+                        }
+                        catch (Exception ex){
+                            ex.printStackTrace();
+                        }
+                    //}
                 }
             });
 
@@ -820,6 +905,11 @@ public class MainActivity extends AppCompatActivity {
         static GridView positionHeaderGridView;
         static GridView assetGridView;
         static GridView assetHeaderGridView;
+        static Spinner accountPositionSpinner;
+        static Spinner accountAssetSpinner;
+        static TextView selectAccountPositionTextView;
+        static TextView selectAccountAssetTextView;
+
 
         /**
          * Returns a new instance of this fragment for the given section
@@ -872,7 +962,7 @@ public class MainActivity extends AppCompatActivity {
 
             positionGridView = (GridView) view.findViewById(R.id.positionGridView);
             positionGridView.setNumColumns(POSITION_COLUMNS);
-            ArrayAdapter<String> positionAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridview_format, positionArray);
+            ArrayAdapter<String> positionAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridview_format, positionShowArray);
             positionAdapter.notifyDataSetChanged();
             positionGridView.setAdapter(positionAdapter);
 
@@ -889,17 +979,53 @@ public class MainActivity extends AppCompatActivity {
 
             assetGridView = (GridView) view.findViewById(R.id.assetGridView);
             assetGridView.setNumColumns(ASSET_COLUMNS);
-            ArrayAdapter<String> assetAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridview_format, assetArray);
+            ArrayAdapter<String> assetAdapter = new ArrayAdapter<String>(this.getContext(), R.layout.my_gridview_format, assetShowArray);
             assetAdapter.notifyDataSetChanged();
             assetGridView.setAdapter(assetAdapter);
+
+            selectAccountPositionTextView = (TextView) view.findViewById(R.id.selectAccountPositionTextView);
+            accountPositionSpinner = (Spinner) view.findViewById(R.id.accountPositionSpinner);
+            selectAccountAssetTextView = (TextView) view.findViewById(R.id.selectAccountAssetTextView);
+            accountAssetSpinner = (Spinner) view.findViewById(R.id.accountAssetSpinner);
+            //if (MainActivity.accountlist!=null) {
+                ArrayAdapter<String> accountPositionAdapter = new ArrayAdapter<String>(this.getContext(), android.R.layout.simple_spinner_item, MainActivity.accountlist);
+                accountPositionSpinner.setAdapter(accountPositionAdapter);
+
+                ArrayAdapter<String> accountAssetAdapter = new ArrayAdapter<String>(this.getContext(), android.R.layout.simple_spinner_item, MainActivity.accountlist);
+                accountAssetSpinner.setAdapter(accountAssetAdapter);
+            //}
 
             equityButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (!started){
+                    if (!started) {
                         return;
                     }
                     startActivity(new Intent(v.getContext(), EquityPop.class));
+                }
+            });
+
+            accountPositionSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+                    positionAccountSelected = (String) accountPositionSpinner.getSelectedItem();
+                    positionChanged = true;
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> arg0) {
+                }
+            });
+
+            accountAssetSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+                    assetAccountSelected = (String) accountAssetSpinner.getSelectedItem();
+                    assetChanged = true;
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> arg0) {
                 }
             });
 

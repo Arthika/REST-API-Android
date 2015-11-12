@@ -4,6 +4,7 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -19,17 +20,67 @@ public class Utils {
     private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 
-    private static final NavigableMap<Double, String> suffixes = new TreeMap<>();
+    private static final NavigableMap<Double, Character> suffixesDouble = new TreeMap<>();
     static {
-        suffixes.put(1000.0, "K");
-        suffixes.put(1000000.0, "M");
-        suffixes.put(1000000000.0, "G");
-        suffixes.put(1000000000000.0, "T");
-        suffixes.put(1000000000000000.0, "P");
-        suffixes.put(1000000000000000000.0, "E");
+        suffixesDouble.put(1000.0, 'K');
+        suffixesDouble.put(1000000.0, 'M');
+        suffixesDouble.put(1000000000.0, 'G');
+        //suffixes.put(1000000000000.0, 'T');
+        //suffixes.put(1000000000000000.0, 'P');
+        //suffixes.put(1000000000000000000.0, 'E');
+    }
+
+    private static final NavigableMap<Integer, Character> suffixesInt = new TreeMap<>();
+    static {
+        suffixesInt.put(1000, 'K');
+        suffixesInt.put(1000000, 'M');
+        suffixesInt.put(1000000000, 'G');
+        //suffixes.put(1000000000000, 'T');
+        //suffixes.put(1000000000000000, 'P');
+        //suffixes.put(1000000000000000000, 'E');
+    }
+
+    public static int stringToInt(String value) throws ParseException {
+        char suffix = value.charAt(value.length()-1);
+        if (!Character.isDigit(suffix)){
+            Iterator<Map.Entry<Integer,Character>> it = suffixesInt.entrySet().iterator();
+            while(it.hasNext()){
+                Map.Entry<Integer,Character> entry = it.next();
+                if (entry.getValue().equals(suffix)){
+                    return stringToInt(value.substring(0, value.length() - 1)) * entry.getKey();
+                }
+            }
+            return Integer.parseInt(value.substring(0, value.length() - 1));
+        }
+        else {
+            return Integer.parseInt(value);
+        }
+    }
+
+    public static String intToString(int value) {
+        if (value < 0) return "-" + intToString(-value);
+        if (value < 1000) return String.valueOf(value);
+
+        Map.Entry<Integer, Character> e = suffixesInt.floorEntry(value);
+        Integer divideBy = e.getKey();
+        Character suffix = e.getValue();
+
+        double truncated = value / (divideBy / 10);
+        boolean hasDecimal = truncated < 100 && (truncated / 10d) != (truncated / 10);
+        return hasDecimal ? String.format(locale, "%.2f", truncated / 10d) + suffix : String.format(locale, "%.2f", truncated / 10) + suffix;
     }
 
     public static double stringToDouble(String value) throws ParseException {
+        char suffix = value.charAt(value.length()-1);
+        if (!Character.isDigit(suffix)){
+            Iterator<Map.Entry<Double,Character>> it = suffixesDouble.entrySet().iterator();
+            while(it.hasNext()){
+                Map.Entry<Double,Character> entry = it.next();
+                if (entry.getValue().equals(suffix)){
+                    return stringToDouble(value.substring(0, value.length() - 2)) * entry.getKey();
+                }
+            }
+        }
         return format.parse(value).doubleValue();
     }
 
@@ -38,9 +89,9 @@ public class Utils {
         if (value < 0) return "-" + doubleToString(-value);
         if (value < 1000) return String.format(locale, "%.2f", value);
 
-        Map.Entry<Double, String> e = suffixes.floorEntry(value);
+        Map.Entry<Double, Character> e = suffixesDouble.floorEntry(value);
         Double divideBy = e.getKey();
-        String suffix = e.getValue();
+        Character suffix = e.getValue();
 
         double truncated = value / (divideBy / 10);
         boolean hasDecimal = truncated < 100 && (truncated / 10d) != (truncated / 10);

@@ -4,8 +4,7 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.DisplayMetrics;
+import android.text.TextWatcher;;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -14,7 +13,6 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.io.IOException;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Arrays;
@@ -29,7 +27,7 @@ public class TradePop extends Activity {
     public static String securitySelected;
     public static String side;
     public static String price;
-    public static int amount;
+    public static String amountString;
     public static String ti;
     static Spinner tradeAmountSpinner;
     static Spinner tradeTypeSpinner;
@@ -44,24 +42,16 @@ public class TradePop extends Activity {
 
         setContentView(R.layout.trade_pop);
 
-        /*
-        DisplayMetrics dm = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(dm);
-        int width = dm.widthPixels;
-        int height = dm.heightPixels;
-        getWindow().setLayout((int) (width * 0.8), (int) (height * 0.6));
-        */
-
         TextView tradeSecTextView = (TextView) this.findViewById(R.id.tradeSecTextView);
         tradeSecTextView.setText(side.toUpperCase() + " " + securitySelected);
 
-        ArrayAdapter<Integer> tradeAmountAdapter = new ArrayAdapter<Integer>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.amountlist);
+        ArrayAdapter<String> tradeAmountAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.amountlist);
         tradeAmountSpinner = (Spinner) this.findViewById(R.id.tradeAmountSpinner);
         tradeAmountSpinner.setAdapter(tradeAmountAdapter);
         tradeAmountSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-                amount = (int) tradeAmountSpinner.getSelectedItem();
+                amountString = (String) tradeAmountSpinner.getSelectedItem();
                 refresh();
             }
 
@@ -146,11 +136,11 @@ public class TradePop extends Activity {
         TextView tradeMessageTextView = (TextView) this.findViewById(R.id.tradeMessageTextView);
         if ("market".equals(type)) {
             tradePriceEditText.setEnabled(false);
-            tradeMessageTextView.setText(side.toUpperCase() + " " + amount + " " + securitySelected + " at market price in " + ti);
+            tradeMessageTextView.setText(side.toUpperCase() + " " + amountString + " " + securitySelected + " at market price in " + ti);
         }
         else{
             tradePriceEditText.setEnabled(true);
-            tradeMessageTextView.setText(side.toUpperCase() + " " + amount + " " + securitySelected + " at " + price + " in " + ti);
+            tradeMessageTextView.setText(side.toUpperCase() + " " + amountString + " " + securitySelected + " at " + price + " in " + ti);
         }
     }
 
@@ -172,7 +162,11 @@ public class TradePop extends Activity {
         ArthikaHFT.orderRequest order = new ArthikaHFT.orderRequest();
         order.security = securitySelected;
         order.tinterface = ti;
-        order.quantity = Integer.valueOf(amount);
+        try {
+            order.quantity = Utils.stringToInt(amountString);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         order.side = side;
         order.type = type;
         order.timeinforce = tradeValiditySpinner.getSelectedItem().toString();
@@ -187,9 +181,7 @@ public class TradePop extends Activity {
         try {
             MainActivity.wrapper.setOrder(Arrays.asList(order));
             finish();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
