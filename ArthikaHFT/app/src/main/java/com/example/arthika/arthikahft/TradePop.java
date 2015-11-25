@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.TextWatcher;;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -15,13 +15,9 @@ import android.widget.TextView;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Locale;
 
-
-/**
- * Created by Jaime on 22/09/2015.
- */
 public class TradePop extends Activity {
 
     public static String securitySelected;
@@ -45,7 +41,7 @@ public class TradePop extends Activity {
         TextView tradeSecTextView = (TextView) this.findViewById(R.id.tradeSecTextView);
         tradeSecTextView.setText(side.toUpperCase() + " " + securitySelected);
 
-        ArrayAdapter<String> tradeAmountAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.amountlist);
+        ArrayAdapter<String> tradeAmountAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.amountList);
         tradeAmountSpinner = (Spinner) this.findViewById(R.id.tradeAmountSpinner);
         tradeAmountSpinner.setAdapter(tradeAmountAdapter);
         tradeAmountSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -60,7 +56,7 @@ public class TradePop extends Activity {
             }
         });
 
-        ArrayAdapter<String> tradeTypeAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.typelist);
+        ArrayAdapter<String> tradeTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.typeList);
         tradeTypeSpinner = (Spinner) this.findViewById(R.id.tradeTypeSpinner);
         tradeTypeSpinner.setAdapter(tradeTypeAdapter);
         tradeTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -75,11 +71,11 @@ public class TradePop extends Activity {
             }
         });
 
-        final ArrayAdapter<String> tradeValidityAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.validitylist);
+        final ArrayAdapter<String> tradeValidityAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.validityList);
         tradeValiditySpinner = (Spinner) this.findViewById(R.id.tradeValiditySpinner);
         tradeValiditySpinner.setAdapter(tradeValidityAdapter);
 
-        ArrayAdapter<String> TIAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.TIlist);
+        ArrayAdapter<String> TIAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.tiList);
         tradeTISpinner = (Spinner) this.findViewById(R.id.tradeTISpinner);
         tradeTISpinner.setAdapter(TIAdapter);
         tradeTISpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -112,10 +108,6 @@ public class TradePop extends Activity {
         refresh();
 
         Button tradeCancelButton = (Button) this.findViewById(R.id.tradeCancelButton);
-        tradeCancelButton.setText("CANCEL");
-        Button tradeOKButton = (Button) this.findViewById(R.id.tradeOKButton);
-        tradeOKButton.setText(side.toUpperCase());
-
         tradeCancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -123,9 +115,12 @@ public class TradePop extends Activity {
             }
         });
 
+        final Button tradeOKButton = (Button) this.findViewById(R.id.tradeOKButton);
+        tradeOKButton.setText(side.toUpperCase());
         tradeOKButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                tradeOKButton.setEnabled(false);
                 sendOrder();
             }
         });
@@ -170,7 +165,7 @@ public class TradePop extends Activity {
         order.side = side;
         order.type = type;
         order.timeinforce = tradeValiditySpinner.getSelectedItem().toString();
-        if (!order.type.equals("market")){
+        if (!order.type.equals(ArthikaHFT.TYPE_MARKET)){
             try {
                 NumberFormat format = NumberFormat.getInstance(Locale.getDefault());
                 order.price = format.parse(tradePriceEditText.getText().toString()).doubleValue();
@@ -179,7 +174,7 @@ public class TradePop extends Activity {
             }
         }
         try {
-            MainActivity.wrapper.setOrder(Arrays.asList(order));
+            MainActivity.wrapper.setOrder(Collections.singletonList(order));
             finish();
         } catch (Exception e) {
             e.printStackTrace();

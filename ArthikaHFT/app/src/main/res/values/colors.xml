@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="my_menu_background">#C0C0C0</color> <!--Silver-->
+    <color name="my_border_color">#808080</color>    <!--Gray-->
+    <color name="my_panel_color">#ffffff</color>     <!--White-->
+    <color name="my_pop_color">#ffa500</color>       <!--Orange-->
+    <color name="my_button_color">#cee7ff</color>    <!--BlueWeb-->
+    <color name="my_spinner_color">#adff2f</color>    <!--GreenYellow-->
+</resources>

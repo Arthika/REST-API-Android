@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#74ff1d">
+    android:background="@color/my_pop_color">
 
     <TextView
         android:layout_width="wrap_content"
@@ -17,7 +17,7 @@
         <TextView
             android:layout_width="175dp"
             android:layout_height="wrap_content"
-            android:text="@string/SelectAmount"
+            android:text="@string/select_amount"
             android:id="@+id/selectTradeAmountTextView"
             android:layout_weight="0.5" />
 
@@ -25,7 +25,8 @@
             android:layout_width="175dp"
             android:layout_height="wrap_content"
             android:id="@+id/tradeAmountSpinner"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.5"
+            android:background="@drawable/abc_spinner_textfield_background_material" />
     </LinearLayout>
 
     <LinearLayout
@@ -36,7 +37,7 @@
         <TextView
             android:layout_width="175dp"
             android:layout_height="wrap_content"
-            android:text="@string/SelectType"
+            android:text="@string/select_type"
             android:id="@+id/selectTradeTypeTextView"
             android:layout_weight="0.5" />
 
@@ -44,7 +45,8 @@
             android:layout_width="175dp"
             android:layout_height="wrap_content"
             android:id="@+id/tradeTypeSpinner"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.5"
+            android:background="@drawable/abc_spinner_textfield_background_material" />
 
     </LinearLayout>
 
@@ -56,7 +58,7 @@
         <TextView
             android:layout_width="175dp"
             android:layout_height="wrap_content"
-            android:text="@string/SelectValidity"
+            android:text="@string/select_validity"
             android:id="@+id/selectTradeValidityTextView"
             android:layout_weight="0.5" />
 
@@ -64,7 +66,8 @@
             android:layout_width="175dp"
             android:layout_height="wrap_content"
             android:id="@+id/tradeValiditySpinner"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.5"
+            android:background="@drawable/abc_spinner_textfield_background_material" />
 
     </LinearLayout>
 
@@ -76,7 +79,7 @@
         <TextView
             android:layout_width="175dp"
             android:layout_height="wrap_content"
-            android:text="@string/SelectTI"
+            android:text="@string/select_ti"
             android:id="@+id/selectTradeTITextView"
             android:layout_weight="0.5" />
 
@@ -84,7 +87,8 @@
             android:layout_width="175dp"
             android:layout_height="wrap_content"
             android:id="@+id/tradeTISpinner"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.5"
+            android:background="@drawable/abc_spinner_textfield_background_material" />
 
     </LinearLayout>
 
@@ -97,7 +101,7 @@
         <TextView
             android:layout_width="175dp"
             android:layout_height="wrap_content"
-            android:text="@string/SelectPrice"
+            android:text="@string/select_price"
             android:id="@+id/selectTradePriceTextView"
             android:layout_weight="0.5" />
 
@@ -127,16 +131,20 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/Cancel"
+            android:text="@string/cancel"
             android:id="@+id/tradeCancelButton"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.5"
+            android:background="@drawable/buttonborder"
+            android:layout_margin="5dp" />
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/OK"
+            android:text="@string/ok"
             android:id="@+id/tradeOKButton"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.5"
+            android:background="@drawable/buttonborder"
+            android:layout_margin="5dp" />
     </LinearLayout>
 
 </LinearLayout>

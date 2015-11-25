@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#74ff1d">
+    android:background="@color/my_pop_color">
 
     <TextView
         android:layout_width="wrap_content"
@@ -20,7 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:id="@+id/timeIniTextView"
+            android:id="@+id/priceTimeIniTextView"
             android:layout_weight="0.50"
             android:textSize="10sp" />
 
@@ -28,14 +28,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:id="@+id/timeEndTextView"
+            android:id="@+id/priceTimeEndTextView"
             android:layout_weight="0.5"
             android:gravity="right"
             android:textSize="10sp" />
     </LinearLayout>
 
     <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/chart"
+        android:id="@+id/priceChart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
@@ -49,8 +49,10 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/Close"
-            android:id="@+id/priceCloseButton" />
+            android:text="@string/close"
+            android:id="@+id/priceCloseButton"
+            android:background="@drawable/buttonborder"
+            android:layout_margin="5dp" />
 
     </LinearLayout>
 

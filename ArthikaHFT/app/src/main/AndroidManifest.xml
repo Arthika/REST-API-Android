@@ -46,6 +46,11 @@
             android:theme="@style/AppTheme.EquityTheme">
         </activity>
 
+        <activity
+            android:name=".OrderInfoPop"
+            android:theme="@style/AppTheme.OrderInfoTheme">
+        </activity>
+
     </application>
 
 </manifest>

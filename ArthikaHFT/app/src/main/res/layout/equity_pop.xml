@@ -2,26 +2,26 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#74ff1d">
+    android:background="@color/my_pop_color">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/equityTextView" />
+        android:id="@+id/equityTextView"
+        android:text="@string/equity" />
 
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:weightSum="1">
+        android:layout_gravity="center_horizontal">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:id="@+id/equityTimeIniTextView"
-            android:layout_weight="0.50"
+            android:layout_weight="0.5"
             android:textSize="10sp" />
 
         <TextView
@@ -64,8 +64,10 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/Close"
-            android:id="@+id/equityCloseButton" />
+            android:text="@string/close"
+            android:id="@+id/equityCloseButton"
+            android:background="@drawable/buttonborder"
+            android:layout_margin="5dp" />
     </LinearLayout>
 
 </LinearLayout>

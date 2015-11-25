@@ -3,9 +3,6 @@ package com.example.arthika.arthikahft;
 import java.text.ParseException;
 import java.util.List;
 
-/**
- * Created by Jaime on 22/09/2015.
- */
 class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
 
     @Override
@@ -38,14 +35,14 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
             //System.out.println("Security: " + tick.security + " Price: " + tick.price + " Side: " + tick.side + " Liquidity: " + tick.liquidity);
             for (int i=0; i<MainActivity.secs.size(); i++){
                 if (tick.security.equals(MainActivity.secs.get(i))){
-                    if (tick.side.equals("ask")){
+                    if (tick.side.equals(ArthikaHFT.SIDE_ASK)){
                         double bestask = pricesArray[(i + 1) * MainActivity.PRICE_COLUMNS + 1];
                         if ((bestask<=0 || bestask>tick.price) && tick.price>0){
                             pricesArray[(i + 1) * MainActivity.PRICE_COLUMNS + 1] = tick.price;
                             prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1] = Utils.doubleToString(tick.price, tick.pips);
                         }
                     }
-                    if (tick.side.equals("bid")){
+                    if (tick.side.equals(ArthikaHFT.SIDE_BID)){
                         double bestbid = pricesArray[(i + 1) * MainActivity.PRICE_COLUMNS + 2];
                         if (bestbid<=0 || bestbid<tick.price){
                             pricesArray[(i + 1) * MainActivity.PRICE_COLUMNS + 2] = tick.price;
@@ -55,21 +52,21 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                 }
             }
         }
-        synchronized(MainActivity.prices) {
-            for (int i = 0; i < MainActivity.secs.size(); i++) {
-                MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1] = prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1];
-                MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2] = prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2];
-            }
+        for (int i = 0; i < MainActivity.secs.size(); i++) {
+            MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1] = prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1];
+            MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2] = prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2];
         }
-        if (PricePop.securitySelected!=null && PricePop.asklist!=null && PricePop.bidlist!=null){
+        if (PricePop.securitySelected!=null && PricePop.askList!=null && PricePop.bidList!=null){
             for (int i=0; i<MainActivity.secs.size(); i++){
                 if (MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS].equals(PricePop.securitySelected)){
-                    try {
-                        PricePop.intervallist.add(MainActivity.updateTime);
-                        PricePop.asklist.add(Utils.stringToDouble(MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1]));
-                        PricePop.bidlist.add(Utils.stringToDouble(MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2]));
-                    } catch (ParseException e) {
-                        e.printStackTrace();
+                    synchronized(PricePop.intervalList) {
+                        try {
+                            PricePop.intervalList.add(MainActivity.updateTime);
+                            PricePop.askList.add(Utils.stringToDouble(MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1]));
+                            PricePop.bidList.add(Utils.stringToDouble(MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2]));
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
@@ -79,24 +76,24 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
     @Override
     public void accountingEvent(ArthikaHFT.accountingTick accountingTick) {
         synchronized(MainActivity.accountingArray) {
-            if (EquityPop.equitystrategylist !=null) {
-                EquityPop.equityintervallist.add(MainActivity.updateTime);
-                EquityPop.equitystrategylist.add(accountingTick.strategyPL);
-                EquityPop.equitypoollist.add(accountingTick.totalequity);
-                if (EquityPop.equityintervallist.size()> EquityPop.EQUITY_MAX_VALUES){
-                    synchronized(EquityPop.equitystrategylist){
+            if (EquityPop.equityStrategyList !=null) {
+                EquityPop.intervalList.add(MainActivity.updateTime);
+                EquityPop.equityStrategyList.add(accountingTick.strategyPL);
+                EquityPop.equityPoolList.add(accountingTick.totalequity);
+                if (EquityPop.intervalList.size()> EquityPop.EQUITY_MAX_VALUES){
+                    synchronized(EquityPop.equityStrategyList){
                         for (int i=0; i<10; i++){
-                            EquityPop.equitystrategylist.remove(0);
+                            EquityPop.equityStrategyList.remove(0);
                         }
                     }
-                    synchronized(EquityPop.equitypoollist){
+                    synchronized(EquityPop.equityPoolList){
                         for (int i=0; i<10; i++){
-                            EquityPop.equitypoollist.remove(0);
+                            EquityPop.equityPoolList.remove(0);
                         }
                     }
-                    synchronized(EquityPop.equityintervallist){
+                    synchronized(EquityPop.intervalList){
                         for (int i=0; i<10; i++){
-                            EquityPop.equityintervallist.remove(0);
+                            EquityPop.intervalList.remove(0);
                         }
                         EquityPop.timeIni="";
                     }
@@ -106,35 +103,35 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
             MainActivity.accountingArray[1]=Utils.doubleToString(accountingTick.totalequity);
             MainActivity.accountingArray[2]=Utils.doubleToString(accountingTick.usedmargin);
             MainActivity.accountingArray[3]=Utils.doubleToString(accountingTick.freemargin);
+            MainActivity.m2mcurrency = accountingTick.m2mcurrency;
             MainActivity.accountingChanged = true;
         }
     }
 
     @Override
     public void assetPositionEvent(List<ArthikaHFT.assetPositionTick> assetPositionTickList) {
-        synchronized(MainActivity.assetArray) {
+        synchronized(MainActivity.assetItemList) {
             for (ArthikaHFT.assetPositionTick tick : assetPositionTickList) {
-                System.out.println("Asset: " + tick.asset + " Account: " + tick.account + " Exposure: " + tick.exposure + " Risk: " + tick.totalrisk);
+                //System.out.println("Asset: " + tick.asset + " Account: " + tick.account + " Exposure: " + tick.exposure + " Risk: " + tick.totalrisk);
                 String asset = tick.asset;
                 String account = tick.account;
-                if (account.equals("<AGGREGATED>")){
-                    account = MainActivity.ALL;;
+                if (account.equals(MainActivity.AGREGATED)){
+                    account = MainActivity.ALL;
                 }
                 boolean found = false;
-                for (int i = 0; i < MainActivity.assetArray.size(); i = i + MainActivity.ASSET_COLUMNS) {
-                    if (asset.equals(MainActivity.assetArray.get(i)) && account.equals(MainActivity.assetArray.get(i+1))) {
-                        MainActivity.assetArray.set(i + 2, Utils.doubleToString(tick.exposure));
-                        MainActivity.assetArray.set(i + 3, Utils.doubleToString(tick.totalrisk));
-                        System.out.println("Asset Modified");
+                for (AssetItem assetItem : MainActivity.assetItemList) {
+                    if (asset.equals(assetItem.getAsset()) && account.equals(assetItem.getAccount())) {
+                        assetItem.setExposure(tick.exposure);
+                        assetItem.setTotalrisk(tick.totalrisk);
+                        assetItem.setPl(tick.pl);
+                        //System.out.println("Asset Modified");
                         found = true;
                         break;
                     }
                 }
                 if (!found) {
-                    MainActivity.assetArray.add(asset);
-                    MainActivity.assetArray.add(account);
-                    MainActivity.assetArray.add(Utils.doubleToString(tick.exposure));
-                    MainActivity.assetArray.add(Utils.doubleToString(tick.totalrisk));
+                    AssetItem assetItem = new AssetItem(asset,account,tick.exposure,tick.totalrisk,tick.pl);
+                    MainActivity.assetItemList.add(assetItem);
                     System.out.println("Asset Added");
                 }
             }
@@ -144,31 +141,30 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
 
     @Override
     public void securityPositionEvent(List<ArthikaHFT.securityPositionTick> securityPositionTickList) {
-        synchronized(MainActivity.positionArray) {
+        synchronized(MainActivity.positionItemList) {
             for (ArthikaHFT.securityPositionTick tick : securityPositionTickList) {
-                System.out.println("Security: " + tick.security + " Account: " + tick.account + " Exposure: " + tick.exposure + " Price: " + tick.price + " Pips: " + tick.pips);
+                //System.out.println("Security: " + tick.security + " Account: " + tick.account + " Exposure: " + tick.exposure + " Price: " + tick.price + " Pips: " + tick.pips);
                 String security = tick.security;
                 String account = tick.account;
-                if (account.equals("<AGGREGATED>")){
+                if (account.equals(MainActivity.AGREGATED)){
                     account = MainActivity.ALL;
                 }
                 boolean found = false;
-                for (int i = 0; i < MainActivity.positionArray.size(); i = i + MainActivity.POSITION_COLUMNS) {
-                    if (security.equals(MainActivity.positionArray.get(i)) && account.equals(MainActivity.positionArray.get(i+1))) {
-                        MainActivity.positionArray.set(i + 2, Utils.doubleToString(tick.exposure));
-                        MainActivity.positionArray.set(i + 3, tick.side);
-                        MainActivity.positionArray.set(i + 4, Utils.doubleToString(tick.price, tick.pips));
-                        System.out.println("Position Modified");
+                for (PositionItem positionItem : MainActivity.positionItemList) {
+                    if (security.equals(positionItem.getSecurity()) && account.equals(positionItem.getAccount())) {
+                        positionItem.setExposure(tick.exposure);
+                        positionItem.setPrice(tick.price);
+                        positionItem.setPips(tick.pips);
+                        positionItem.setSide(tick.side);
+                        positionItem.setPl(tick.pl);
+                        //System.out.println("Position Modified");
                         found = true;
                         break;
                     }
                 }
                 if (!found) {
-                    MainActivity.positionArray.add(security);
-                    MainActivity.positionArray.add(account);
-                    MainActivity.positionArray.add(Utils.doubleToString(tick.exposure));
-                    MainActivity.positionArray.add(tick.side);
-                    MainActivity.positionArray.add(Utils.doubleToString(tick.price, tick.pips));
+                    PositionItem positionItem = new PositionItem(security,account,tick.exposure,tick.price,tick.pips,tick.side,tick.pl,null);
+                    MainActivity.positionItemList.add(positionItem);
                     System.out.println("Position Added");
                 }
             }
@@ -209,81 +205,88 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
         for (ArthikaHFT.orderTick tick : orderTickList){
             System.out.println("TempId: " + tick.tempid + " OrderId: " + tick.orderid + " FixId: " + tick.fixid + " Security: " + tick.security + " Account: " + tick.account + " Quantity: " + tick.quantity + " Type: " + tick.type + " Side: " + tick.side + " Status: " + tick.status);
             String orderid = tick.orderid;
-            if ("in flux".equals(tick.status)) {
+            if (ArthikaHFT.ORDERTYPE_INFLUX.equals(tick.status)) {
                 continue;
             }
-            if ("pending".equals(tick.status)) {
-                synchronized(MainActivity.pendingOrderArray) {
+            if (ArthikaHFT.ORDERTYPE_PENDING.equals(tick.status)) {
+                synchronized(MainActivity.pendingOrderList) {
                     boolean found = false;
-                    for (int i = 0; i < MainActivity.pendingOrderArray.size(); i = i + MainActivity.PENDINGORDER_COLUMNS) {
-                        if (orderid.equals(MainActivity.pendingOrderArray.get(i))) {
-                            MainActivity.pendingOrderArray.set(i + 1, tick.fixid);
-                            MainActivity.pendingOrderArray.set(i + 2, tick.security);
-                            MainActivity.pendingOrderArray.set(i + 3, Utils.intToString(tick.quantity));
-                            MainActivity.pendingOrderArray.set(i + 4, tick.side);
-                            MainActivity.pendingOrderArray.set(i + 5, Utils.doubleToString(tick.limitprice, tick.pips));
+                    for (OrderItem order : MainActivity.pendingOrderList) {
+                        if (orderid.equals(order.getOrderid())) {
+                            order.setFixid(tick.fixid);
+                            order.setSecurity(tick.security);
+                            order.setTinterface(tick.tinterface);
+                            order.setQuantity(tick.quantity);
+                            order.setSide(tick.side);
+                            order.setLimitprice(tick.limitprice);
+                            order.setPips(tick.pips);
+                            order.setCommission(tick.commission);
+                            order.setCommcurrency(tick.commcurrency);
+                            order.setFinishedprice(tick.finishedprice);
+                            order.setFinishedquantity(tick.finishedquantity);
+                            order.setStatus(tick.status);
+                            order.setType(tick.type);
+                            order.setReason(tick.reason);
                             System.out.println("Pending Order Modified");
                             found = true;
                             break;
                         }
                     }
                     if (!found) {
-                        MainActivity.pendingOrderArray.add(0, orderid);
-                        MainActivity.pendingOrderArray.add(1, tick.fixid);
-                        MainActivity.pendingOrderArray.add(2, tick.security);
-                        MainActivity.pendingOrderArray.add(3, Utils.intToString(tick.quantity));
-                        MainActivity.pendingOrderArray.add(4, tick.side);
-                        MainActivity.pendingOrderArray.add(5, Utils.doubleToString(tick.limitprice, tick.pips));
-                        MainActivity.pendingOrderArray.add(6, "Modify");
-                        MainActivity.pendingOrderArray.add(7, "Cancel");
+                        OrderItem order = new OrderItem(tick.orderid, tick.fixid, tick.tinterface, tick.security, tick.quantity, tick.limitprice, tick.pips, tick.side, tick.type, tick.finishedprice, tick.finishedquantity, tick.commission, tick.commcurrency, tick.status, tick.reason);
+                        MainActivity.pendingOrderList.add(0,order);
                         System.out.println("Pending Order Added");
-                        if (MainActivity.pendingOrderArray.size() > MainActivity.MAX_PENDING_ORDERS * MainActivity.PENDINGORDER_COLUMNS) {
-                            for (int j = 0; j < MainActivity.PENDINGORDER_COLUMNS; j++) {
-                                MainActivity.pendingOrderArray.remove(MainActivity.pendingOrderArray.size()-1);
-                            }
+                        if (MainActivity.pendingOrderList.size() > MainActivity.MAX_PENDING_ORDERS) {
+                            MainActivity.pendingOrderList.remove(MainActivity.pendingOrderList.size()-1);
                         }
                     }
                     MainActivity.pendingOrderChanged = true;
                 }
             }
             else{
-                synchronized(MainActivity.pendingOrderArray) {
-                    for (int i = 0; i < MainActivity.pendingOrderArray.size(); i = i + MainActivity.PENDINGORDER_COLUMNS) {
-                        if (orderid.equals(MainActivity.pendingOrderArray.get(i))) {
-                            for (int j = 0; j < MainActivity.PENDINGORDER_COLUMNS; j++) {
-                                MainActivity.pendingOrderArray.remove(i);
-                            }
-                            MainActivity.pendingOrderChanged = true;
-                            System.out.println("Pending Order Deleted");
+                synchronized(MainActivity.pendingOrderList) {
+                    OrderItem pendingOrder = null;
+                    for (OrderItem order : MainActivity.pendingOrderList){
+                        if (orderid.equals(order.getOrderid())) {
+                            pendingOrder = order;
+                            break;
                         }
+                    }
+                    if (pendingOrder!=null){
+                        MainActivity.pendingOrderList.remove(pendingOrder);
+                        MainActivity.pendingOrderChanged = true;
+                        System.out.println("Pending Order Deleted");
                     }
                 }
                 boolean found = false;
-                synchronized(MainActivity.closedOrderArray) {
-                    for (int i = 0; i < MainActivity.closedOrderArray.size(); i = i + MainActivity.CLOSEDORDER_COLUMNS) {
-                        if (orderid.equals(MainActivity.closedOrderArray.get(i))) {
-                            MainActivity.closedOrderArray.set(i + 1, tick.security);
-                            MainActivity.closedOrderArray.set(i + 2, Utils.intToString(tick.finishedquantity));
-                            MainActivity.closedOrderArray.set(i + 3, tick.side);
-                            MainActivity.closedOrderArray.set(i + 4, Utils.doubleToString(tick.finishedprice, tick.pips));
-                            MainActivity.closedOrderArray.set(i + 5, tick.status);
-                            System.out.println("Order Modified");
+                synchronized(MainActivity.closedOrderList) {
+                    for (OrderItem order : MainActivity.closedOrderList){
+                        if (orderid.equals(order.getOrderid())) {
+                            order.setFixid(tick.fixid);
+                            order.setSecurity(tick.security);
+                            order.setTinterface(tick.tinterface);
+                            order.setQuantity(tick.quantity);
+                            order.setSide(tick.side);
+                            order.setLimitprice(tick.limitprice);
+                            order.setPips(tick.pips);
+                            order.setCommission(tick.commission);
+                            order.setCommcurrency(tick.commcurrency);
+                            order.setFinishedprice(tick.finishedprice);
+                            order.setFinishedquantity(tick.finishedquantity);
+                            order.setStatus(tick.status);
+                            order.setType(tick.type);
+                            order.setReason(tick.reason);
+                            System.out.println("Closed Order Modified");
                             found = true;
                             break;
                         }
                     }
                     if (!found) {
-                        MainActivity.closedOrderArray.add(0, orderid);
-                        MainActivity.closedOrderArray.add(1, tick.security);
-                        MainActivity.closedOrderArray.add(2, Utils.intToString(tick.finishedquantity));
-                        MainActivity.closedOrderArray.add(3, tick.side);
-                        MainActivity.closedOrderArray.add(4, Utils.doubleToString(tick.finishedprice, tick.pips));
-                        MainActivity.closedOrderArray.add(5, tick.status);
-                        System.out.println("Order Added");
-                        if (MainActivity.closedOrderArray.size() > MainActivity.MAX_CLOSED_ORDERS * MainActivity.CLOSEDORDER_COLUMNS) {
-                            for (int j = 0; j < MainActivity.CLOSEDORDER_COLUMNS; j++) {
-                                MainActivity.closedOrderArray.remove(MainActivity.closedOrderArray.size()-1);
-                            }
+                        OrderItem order = new OrderItem(tick.orderid, tick.fixid, tick.tinterface, tick.security, tick.quantity, tick.limitprice, tick.pips, tick.side, tick.type, tick.finishedprice, tick.finishedquantity, tick.commission, tick.commcurrency, tick.status, tick.reason);
+                        MainActivity.closedOrderList.add(0,order);
+                        System.out.println("Closed Order Added");
+                        if (MainActivity.closedOrderList.size() > MainActivity.MAX_CLOSED_ORDERS) {
+                            MainActivity.closedOrderList.remove(MainActivity.closedOrderList.size()-1);
                         }
                     }
                     MainActivity.closedOrderChanged = true;

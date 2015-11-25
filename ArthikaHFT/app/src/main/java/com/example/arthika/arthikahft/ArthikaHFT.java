@@ -67,14 +67,16 @@ public class ArthikaHFT {
     private String authentication_port;
     private String request_port;
     private String ssl_cert;
-    public String challenge;
+    private String challenge;
     private String token = null;
-    SSLContext sslContext = null;
+    private SSLContext sslContext = null;
 
     private HashMap<ThreadExecution,myResponseHandler> threadmap;
 
     public static final String SIDE_BUY = "buy";
     public static final String SIDE_SELL = "sell";
+    public static final String SIDE_ASK = "ask";
+    public static final String SIDE_BID = "bid";
     public static final String TYPE_MARKET = "market";
     public static final String TYPE_LIMIT = "limit";
     public static final String VALIDITY_DAY = "day";
@@ -84,13 +86,12 @@ public class ArthikaHFT {
     public static final String GRANULARITY_TOB = "tob";
     //public static final String GRANULARITY_FAB = "fab";
 
-    /*
     public static final String ORDERTYPE_PENDING = "pending";
-    public static final String ORDERTYPE_INDETERMINATED = "indetermined";
-    public static final String ORDERTYPE_EXECUTED = "executed";
-    public static final String ORDERTYPE_CANCELED = "canceled";
-    public static final String ORDERTYPE_REJECTED = "rejected";
-    */
+    //public static final String ORDERTYPE_INDETERMINATED = "indetermined";
+    //public static final String ORDERTYPE_EXECUTED = "executed";
+    //public static final String ORDERTYPE_CANCELED = "canceled";
+    //public static final String ORDERTYPE_REJECTED = "rejected";
+    public static final String ORDERTYPE_INFLUX = "in flux";
 
     public static class hftRequest {
         public getAuthorizationChallengeRequest getAuthorizationChallenge;
@@ -352,6 +353,7 @@ public class ArthikaHFT {
         public String  asset;
         public double  exposure;
         public double  totalrisk;
+        public double  pl;
     }
 
     public static class securityPositionTick {
@@ -361,6 +363,7 @@ public class ArthikaHFT {
         public String  side;
         public double  price;
         public int     pips;
+        public double  pl;
     }
 
     public static class accountingTick {
@@ -368,6 +371,7 @@ public class ArthikaHFT {
         public double  totalequity;
         public double  usedmargin;
         public double  freemargin;
+        public String  m2mcurrency;
     }
 
     public static class positionHeartbeat {

@@ -17,19 +17,16 @@ import com.github.mikephil.charting.data.LineDataSet;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Jaime on 22/09/2015.
- */
 public class PricePop extends Activity {
 
-    public static List<Double> asklist;
-    public static List<Double> bidlist;
-    public static List<String> intervallist;
+    public static final List<Double> askList = new ArrayList<>();
+    public static final List<Double> bidList = new ArrayList<>();
+    public static final List<String> intervalList = new ArrayList<>();
     public static String securitySelected;
-    private static LineChart chart;
+    private static LineChart priceChart;
     private static String timeIni;
-    private static TextView timeIniTextView;
-    private static TextView timeEndTextView;
+    private static TextView priceTimeIniTextView;
+    private static TextView priceTimeEndTextView;
 
     private static final int MAX_VALUES = 80;
 
@@ -49,19 +46,17 @@ public class PricePop extends Activity {
         TextView popSecTextView = (TextView) this.findViewById(R.id.popSecTextView);
         popSecTextView.setText(securitySelected);
 
-        timeIniTextView = (TextView) this.findViewById(R.id.timeIniTextView);
-        timeEndTextView = (TextView) this.findViewById(R.id.timeEndTextView);
+        priceTimeIniTextView = (TextView) this.findViewById(R.id.priceTimeIniTextView);
+        priceTimeEndTextView = (TextView) this.findViewById(R.id.priceTimeEndTextView);
 
-        asklist = new ArrayList<Double>();
-        bidlist = new ArrayList<Double>();
-        intervallist = new ArrayList<String>();
+        askList.clear();
+        bidList.clear();
+        intervalList.clear();
         timeIni = "";
 
-        chart = (LineChart) findViewById(R.id.chart);
+        priceChart = (LineChart) findViewById(R.id.priceChart);
 
         Button priceCloseButton = (Button) this.findViewById(R.id.priceCloseButton);
-        priceCloseButton.setText("CLOSE");
-
         priceCloseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -73,91 +68,88 @@ public class PricePop extends Activity {
 
     @Override
     protected void onDestroy() {
-        chart=null;
+        priceChart=null;
         securitySelected="";
         super.onDestroy();
     }
 
     public static void refresh(){
-        if (chart!=null) {
+        if (priceChart!=null) {
 
-            if (asklist == null || bidlist == null || intervallist == null) {
+            if (askList == null || bidList == null || intervalList == null) {
                 return;
             }
 
-            if (asklist.isEmpty() || bidlist.isEmpty() || intervallist.isEmpty() ) {
+            if (askList.isEmpty() || bidList.isEmpty() || intervalList.isEmpty() ) {
                 return;
             }
 
-            if (timeIni.equals("") && timeIniTextView!=null){
-                long timelong = new Double(new Double(intervallist.get(0)) * 1000).longValue();
-                timeIniTextView.setText(Utils.timeToString(timelong));
+            if (timeIni.equals("") && priceTimeIniTextView!=null){
+                long timelong = Double.valueOf(Double.valueOf(intervalList.get(0)) * 1000).longValue();
+                priceTimeIniTextView.setText(Utils.timeToString(timelong));
             }
 
-            if (timeEndTextView!=null){
-                long timelong = new Double(new Double(intervallist.get(intervallist.size()-1)) * 1000).longValue();
-                timeEndTextView.setText(Utils.timeToString(timelong));
+            if (priceTimeEndTextView!=null){
+                long timelong = Double.valueOf(Double.valueOf(intervalList.get(intervalList.size()-1)) * 1000).longValue();
+                priceTimeEndTextView.setText(Utils.timeToString(timelong));
             }
 
-            if (intervallist.size()>MAX_VALUES){
-                synchronized(asklist){
+            if (intervalList.size()>MAX_VALUES){
+                synchronized(intervalList){
                     for (int i=0; i<10; i++){
-                        asklist.remove(0);
+                        askList.remove(0);
                     }
-                    long timelong = new Double(new Double(intervallist.get(0)) * 1000).longValue();
-                    timeIniTextView.setText(Utils.timeToString(timelong));
-                }
-                synchronized(bidlist){
+                    long timelong = Double.valueOf(Double.valueOf(intervalList.get(0)) * 1000).longValue();
+                    priceTimeIniTextView.setText(Utils.timeToString(timelong));
                     for (int i=0; i<10; i++){
-                        bidlist.remove(0);
+                        bidList.remove(0);
                     }
-                }
-                synchronized(intervallist){
+
                     for (int i=0; i<10; i++){
-                        intervallist.remove(0);
+                        intervalList.remove(0);
                     }
                 }
             }
 
-            ArrayList<Entry> valsComp1 = new ArrayList<Entry>();
-            ArrayList<Entry> valsComp2 = new ArrayList<Entry>();
-            for (int i = 0; i < asklist.size(); i++) {
-                Entry entry = new Entry( asklist.get(i).floatValue(), i);
+            ArrayList<Entry> valsComp1 = new ArrayList<>();
+            ArrayList<Entry> valsComp2 = new ArrayList<>();
+            for (int i = 0; i < askList.size(); i++) {
+                Entry entry = new Entry(askList.get(i).floatValue(), i);
                 valsComp1.add(entry);
             }
-            for (int i = 0; i < bidlist.size(); i++) {
-                Entry entry = new Entry( bidlist.get(i).floatValue(), i);
+            for (int i = 0; i < bidList.size(); i++) {
+                Entry entry = new Entry(bidList.get(i).floatValue(), i);
                 valsComp2.add(entry);
             }
 
-            LineDataSet setComp1 = new LineDataSet(valsComp1, "ASK");
+            LineDataSet setComp1 = new LineDataSet(valsComp1, ArthikaHFT.SIDE_ASK.toUpperCase());
             setComp1.setAxisDependency(YAxis.AxisDependency.LEFT);
             setComp1.setCircleColor(Color.BLUE);
             setComp1.setColor(Color.BLUE);
-            LineDataSet setComp2 = new LineDataSet(valsComp2, "BID");
+            LineDataSet setComp2 = new LineDataSet(valsComp2, ArthikaHFT.SIDE_BID.toUpperCase());
             setComp2.setAxisDependency(YAxis.AxisDependency.LEFT);
             setComp2.setCircleColor(Color.RED);
             setComp2.setColor(Color.RED);
 
-            ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
+            ArrayList<LineDataSet> dataSets = new ArrayList<>();
             dataSets.add(setComp1);
             dataSets.add(setComp2);
 
-            ArrayList<String> xVals = new ArrayList<String>();
-            for (int i = 0; i < intervallist.size(); i++) {
-                xVals.add(intervallist.get(i));
+            ArrayList<String> xVals = new ArrayList<>();
+            for (String interval : intervalList) {
+                xVals.add(interval);
             }
 
-            YAxis axis = chart.getAxisLeft();
+            YAxis axis = priceChart.getAxisLeft();
             axis.setStartAtZero(false);
 
-            chart.getAxisRight().setEnabled(false);
-            chart.getXAxis().setEnabled(false);
+            priceChart.getAxisRight().setEnabled(false);
+            priceChart.getXAxis().setEnabled(false);
 
             LineData data = new LineData(xVals, dataSets);
-            chart.setData(data);
-            chart.invalidate();
-            chart.setDescription(securitySelected);
+            priceChart.setData(data);
+            priceChart.invalidate();
+            priceChart.setDescription(securitySelected);
         }
     }
 

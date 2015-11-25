@@ -15,13 +15,9 @@ import android.widget.TextView;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Locale;
 
-
-/**
- * Created by Jaime on 22/09/2015.
- */
 public class TradeModifyPop extends Activity {
 
     public static String securitySelected;
@@ -41,10 +37,14 @@ public class TradeModifyPop extends Activity {
         TextView tradeModifySecTextView = (TextView) this.findViewById(R.id.tradeModifySecTextView);
         tradeModifySecTextView.setText(side.toUpperCase() + " " + securitySelected);
 
-        ArrayAdapter<String> tradeModifyAmountAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.amountlist);
+        ArrayAdapter<String> tradeModifyAmountAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.amountList);
         tradeModifyAmountSpinner = (Spinner) this.findViewById(R.id.tradeModifyAmountSpinner);
         tradeModifyAmountSpinner.setAdapter(tradeModifyAmountAdapter);
-        int spinnerPosition = tradeModifyAmountAdapter.getPosition(amountString);
+        int spinnerPosition = 0;
+        try {
+            spinnerPosition = tradeModifyAmountAdapter.getPosition(Utils.stringToStringNoDecimals(amountString));
+        } catch (ParseException e) {
+        }
         if (spinnerPosition>=0) {
             tradeModifyAmountSpinner.setSelection(spinnerPosition);
         }
@@ -78,10 +78,6 @@ public class TradeModifyPop extends Activity {
         refresh();
 
         Button tradeModifyCancelButton = (Button) this.findViewById(R.id.tradeModifyCancelButton);
-        tradeModifyCancelButton.setText("CANCEL");
-        Button tradeModifyOKButton = (Button) this.findViewById(R.id.tradeModifyOKButton);
-        tradeModifyOKButton.setText("MODIFY");
-
         tradeModifyCancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -89,9 +85,11 @@ public class TradeModifyPop extends Activity {
             }
         });
 
+        final Button tradeModifyOKButton = (Button) this.findViewById(R.id.tradeModifyOKButton);
         tradeModifyOKButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                tradeModifyOKButton.setEnabled(false);
                 modifyOrder();
             }
         });
@@ -132,7 +130,7 @@ public class TradeModifyPop extends Activity {
             order.price = Double.parseDouble(tradeModifyPriceEditText.getText().toString());
         }
         try {
-            MainActivity.wrapper.modifyOrder(Arrays.asList(order));
+            MainActivity.wrapper.modifyOrder(Collections.singletonList(order));
             finish();
         } catch (Exception e) {
             e.printStackTrace();

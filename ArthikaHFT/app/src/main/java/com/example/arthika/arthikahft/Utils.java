@@ -1,5 +1,6 @@
 package com.example.arthika.arthikahft;
 
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -10,15 +11,13 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-/**
- * Created by Jaime on 29/10/2015.
- */
 public class Utils {
 
     private static Locale locale = Locale.getDefault();
     private static NumberFormat format = NumberFormat.getInstance(locale);
     private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
+    private static char decimalSeparator = ((DecimalFormat) format).getDecimalFormatSymbols().getDecimalSeparator();
 
     private static final NavigableMap<Double, Character> suffixesDouble = new TreeMap<>();
     static {
@@ -43,10 +42,8 @@ public class Utils {
     public static int stringToInt(String value) throws ParseException {
         char suffix = value.charAt(value.length()-1);
         if (!Character.isDigit(suffix)){
-            Iterator<Map.Entry<Integer,Character>> it = suffixesInt.entrySet().iterator();
-            while(it.hasNext()){
-                Map.Entry<Integer,Character> entry = it.next();
-                if (entry.getValue().equals(suffix)){
+            for (Map.Entry<Integer, Character> entry : suffixesInt.entrySet()) {
+                if (entry.getValue().equals(suffix)) {
                     return stringToInt(value.substring(0, value.length() - 1)) * entry.getKey();
                 }
             }
@@ -73,10 +70,8 @@ public class Utils {
     public static double stringToDouble(String value) throws ParseException {
         char suffix = value.charAt(value.length()-1);
         if (!Character.isDigit(suffix)){
-            Iterator<Map.Entry<Double,Character>> it = suffixesDouble.entrySet().iterator();
-            while(it.hasNext()){
-                Map.Entry<Double,Character> entry = it.next();
-                if (entry.getValue().equals(suffix)){
+            for (Map.Entry<Double, Character> entry : suffixesDouble.entrySet()) {
+                if (entry.getValue().equals(suffix)) {
                     return stringToDouble(value.substring(0, value.length() - 2)) * entry.getKey();
                 }
             }
@@ -100,6 +95,15 @@ public class Utils {
 
     public static String doubleToString(double value, int decimal) {
         return String.format(locale, "%." + decimal + "f", value);
+    }
+
+    public static String stringToStringNoDecimals(String value) throws ParseException {
+        String res = value.substring(0,value.indexOf(decimalSeparator));
+        char suffix = value.charAt(value.length()-1);
+        if (!Character.isDigit(suffix)){
+            res = res.concat(String.valueOf(suffix));
+        }
+        return res;
     }
 
     public static String dateToString(long timelong) {

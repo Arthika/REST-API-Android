@@ -3,7 +3,8 @@
     android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity">
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity"
+    android:background="@color/my_menu_background">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -23,17 +24,31 @@
 
                 <TextView
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="@string/Accounting"
-                    android:id="@+id/accountingTextView" />
+                    android:text="@string/accounting"
+                    android:id="@+id/accountingTextView"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:id="@+id/accountingCurrencyTextView"
+                    android:gravity="center_vertical|left"
+                    android:layout_weight="1" />
 
                 <Button
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/Equity"
+                    android:text="@string/show_equity"
                     android:id="@+id/equityButton"
-                    android:layout_weight="0.5" />
+                    android:background="@drawable/buttonborder"
+                    android:layout_margin="5dp"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
+                    android:paddingTop="0dp"
+                    android:paddingBottom="0dp" />
 
             </LinearLayout>
 
@@ -45,16 +60,7 @@
                 android:clickable="false"
                 android:drawSelectorOnTop="false"
                 android:scrollingCache="false"
-                android:padding="0dp"
-                android:paddingLeft="0dp"
-                android:paddingTop="0dp"
-                android:paddingRight="0dp"
-                android:paddingBottom="0dp"
-                android:paddingEnd="0dp"
-                android:paddingStart="0dp"
-                android:verticalSpacing="0dp"
-                android:horizontalSpacing="0dp"
-                android:gravity="fill_horizontal" />
+                android:verticalSpacing="@dimen/my_verticalspacing" />
 
             <GridView
                 android:layout_width="match_parent"
@@ -64,17 +70,8 @@
                 android:clickable="false"
                 android:drawSelectorOnTop="false"
                 android:scrollingCache="false"
-                android:padding="0dp"
-                android:paddingLeft="0dp"
-                android:paddingTop="0dp"
-                android:paddingRight="0dp"
-                android:paddingBottom="0dp"
-                android:paddingEnd="0dp"
-                android:paddingStart="0dp"
-                android:verticalSpacing="0dp"
-                android:horizontalSpacing="0dp"
-                android:gravity="fill_horizontal"
-                android:nestedScrollingEnabled="false" />
+                android:nestedScrollingEnabled="false"
+                android:verticalSpacing="@dimen/my_verticalspacing" />
         </LinearLayout>
 
         <LinearLayout
@@ -91,26 +88,39 @@
                 android:layout_height="wrap_content">
 
                 <TextView
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="@string/Positions"
+                    android:text="@string/swap"
                     android:id="@+id/positionsTextView"
-                    android:layout_weight="0.3" />
+                    android:layout_weight="0.22"
+                    android:gravity="center_vertical" />
 
                 <TextView
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/SelectAccount"
+                    android:text="@string/close_all"
+                    android:id="@+id/closeAllPositionsTextView"
+                    android:layout_weight="0.18"
+                    android:padding="0dp"
+                    android:textSize="12sp"
+                    android:background="@drawable/buttonborder"
+                    android:gravity="center_horizontal" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/select_account"
                     android:id="@+id/selectAccountPositionTextView"
                     android:layout_weight="0.3"
                     android:gravity="right" />
 
                 <Spinner
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:id="@+id/accountPositionSpinner"
-                    android:layout_weight="0.3" />
+                    android:layout_weight="0.3"
+                    android:background="@drawable/abc_spinner_textfield_background_material" />
             </LinearLayout>
 
             <GridView
@@ -121,36 +131,18 @@
                 android:clickable="false"
                 android:drawSelectorOnTop="false"
                 android:scrollingCache="false"
-                android:padding="0dp"
-                android:paddingLeft="0dp"
-                android:paddingTop="0dp"
-                android:paddingRight="0dp"
-                android:paddingBottom="0dp"
-                android:paddingEnd="0dp"
-                android:paddingStart="0dp"
-                android:verticalSpacing="0dp"
-                android:horizontalSpacing="0dp"
-                android:gravity="fill_horizontal" />
+                android:verticalSpacing="@dimen/my_verticalspacing" />
 
             <GridView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:id="@+id/positionGridView"
                 android:textFilterEnabled="false"
                 android:clickable="false"
                 android:drawSelectorOnTop="false"
                 android:scrollingCache="true"
-                android:padding="0dp"
-                android:paddingLeft="0dp"
-                android:paddingTop="0dp"
-                android:paddingRight="0dp"
-                android:paddingBottom="0dp"
-                android:paddingEnd="0dp"
-                android:paddingStart="0dp"
-                android:verticalSpacing="0dp"
-                android:horizontalSpacing="0dp"
-                android:gravity="fill_horizontal"
-                android:nestedScrollingEnabled="true" />
+                android:nestedScrollingEnabled="true"
+                android:verticalSpacing="@dimen/my_verticalspacing" />
         </LinearLayout>
 
         <LinearLayout
@@ -167,26 +159,28 @@
                 android:layout_height="wrap_content">
 
                 <TextView
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="@string/Assets"
+                    android:text="@string/cash"
                     android:id="@+id/assetsTextView"
-                    android:layout_weight="0.3" />
+                    android:layout_weight="0.4"
+                    android:gravity="center_vertical" />
 
                 <TextView
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/SelectAccount"
+                    android:text="@string/select_account"
                     android:id="@+id/selectAccountAssetTextView"
-                    android:gravity="right"
-                    android:layout_weight="0.3" />
+                    android:layout_weight="0.3"
+                    android:gravity="right" />
 
                 <Spinner
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:id="@+id/accountAssetSpinner"
-                    android:layout_weight="0.3" />
+                    android:layout_weight="0.3"
+                    android:background="@drawable/abc_spinner_textfield_background_material" />
 
             </LinearLayout>
 
@@ -194,33 +188,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/assetHeaderGridView"
-                android:gravity="fill_horizontal"
-                android:horizontalSpacing="0dp"
-                android:padding="0dp"
-                android:paddingLeft="0dp"
-                android:paddingTop="0dp"
-                android:paddingRight="0dp"
-                android:paddingBottom="0dp"
-                android:paddingEnd="0dp"
-                android:paddingStart="0dp"
-                android:verticalSpacing="0dp" />
+                android:verticalSpacing="@dimen/my_verticalspacing" />
 
             <GridView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:id="@+id/assetGridView"
                 android:nestedScrollingEnabled="true"
-                android:gravity="fill_horizontal"
-                android:horizontalSpacing="0dp"
                 android:scrollingCache="true"
-                android:padding="0dp"
-                android:paddingLeft="0dp"
-                android:paddingTop="0dp"
-                android:paddingRight="0dp"
-                android:paddingBottom="0dp"
-                android:paddingEnd="0dp"
-                android:paddingStart="0dp"
-                android:verticalSpacing="0dp" />
+                android:verticalSpacing="@dimen/my_verticalspacing" />
         </LinearLayout>
 
     </LinearLayout>

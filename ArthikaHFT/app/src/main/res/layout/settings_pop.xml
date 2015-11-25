@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#74ff1d">
+    android:background="@color/my_pop_color">
 
     <TextView
         android:layout_width="wrap_content"
@@ -17,7 +17,7 @@
         <TextView
             android:layout_width="150dp"
             android:layout_height="wrap_content"
-            android:text="@string/SelectDomain"
+            android:text="@string/select_domain"
             android:id="@+id/selectDomainTextView"
             android:layout_weight="0.5" />
 
@@ -25,7 +25,8 @@
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:id="@+id/domainSpinner"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.5"
+            android:background="@drawable/abc_spinner_textfield_background_material" />
     </LinearLayout>
 
     <LinearLayout
@@ -37,7 +38,7 @@
         <TextView
             android:layout_width="150dp"
             android:layout_height="wrap_content"
-            android:text="@string/Strategy"
+            android:text="@string/strategy"
             android:id="@+id/insertUserTextView"
             android:layout_weight="0.5" />
 
@@ -59,7 +60,7 @@
         <TextView
             android:layout_width="150dp"
             android:layout_height="wrap_content"
-            android:text="@string/Password"
+            android:text="@string/password"
             android:id="@+id/insertPasswordTextView"
             android:layout_weight="0.5" />
 
@@ -80,7 +81,7 @@
         <TextView
             android:layout_width="150dp"
             android:layout_height="wrap_content"
-            android:text="@string/SelectInterval"
+            android:text="@string/select_interval"
             android:id="@+id/selectIntervalTextView"
             android:layout_weight="0.5" />
 
@@ -88,21 +89,22 @@
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:id="@+id/intervalSpinner"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.5"
+            android:background="@drawable/abc_spinner_textfield_background_material" />
     </LinearLayout>
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/border2"
+        android:background="@drawable/borderpop"
         android:layout_marginLeft="5dp"
         android:layout_marginRight="5dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/SelectSecurities"
+            android:text="@string/select_securities"
             android:id="@+id/selectSecuritiestextView"
             android:gravity="center" />
 
@@ -121,16 +123,20 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/Cancel"
+            android:text="@string/cancel"
             android:id="@+id/settingsCancelButton"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.5"
+            android:background="@drawable/buttonborder"
+            android:layout_margin="5dp" />
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/OK"
+            android:text="@string/modify"
             android:id="@+id/settingsOKButton"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.5"
+            android:background="@drawable/buttonborder"
+            android:layout_margin="5dp" />
     </LinearLayout>
 
 </LinearLayout>

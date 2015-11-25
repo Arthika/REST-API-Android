@@ -18,16 +18,13 @@ import com.github.mikephil.charting.formatter.YAxisValueFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Jaime on 22/09/2015.
- */
 public class EquityPop extends Activity {
 
-    public static List<Double> equitystrategylist;
-    public static List<Double> equitypoollist;
-    public static List<String> equityintervallist;
-    private static LineChart equitystrategyChart;
-    private static LineChart equitypoolChart;
+    public final static List<Double> equityStrategyList = new ArrayList<>();
+    public final static List<Double> equityPoolList = new ArrayList<>();
+    public final static List<String> intervalList = new ArrayList<>();
+    private static LineChart equityStrategyChart;
+    private static LineChart equityPoolChart;
     public static String timeIni;
     private static TextView equityTimeIniTextView;
     private static TextView equityTimeEndTextView;
@@ -47,21 +44,16 @@ public class EquityPop extends Activity {
         int height = dm.heightPixels;
         getWindow().setLayout((int) (width * 0.8), (int) (height * 0.8));
 
-        TextView equityTextView = (TextView) this.findViewById(R.id.equityTextView);
-        equityTextView.setText("Equity");
-
         equityTimeIniTextView = (TextView) this.findViewById(R.id.equityTimeIniTextView);
         equityTimeEndTextView = (TextView) this.findViewById(R.id.equityTimeEndTextView);
 
         timeIni = "";
 
-        equitystrategyChart = (LineChart) findViewById(R.id.equityStrategyChart);
-        equitypoolChart = (LineChart) findViewById(R.id.equityPoolChart);
+        equityStrategyChart = (LineChart) findViewById(R.id.equityStrategyChart);
+        equityPoolChart = (LineChart) findViewById(R.id.equityPoolChart);
         myValueFormatter = new MyValueFormatter();
 
         Button equityCloseButton = (Button) this.findViewById(R.id.equityCloseButton);
-        equityCloseButton.setText("CLOSE");
-
         equityCloseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -73,98 +65,98 @@ public class EquityPop extends Activity {
 
     @Override
     protected void onDestroy() {
-        equitystrategyChart =null;
-        equitypoolChart =null;
+        equityStrategyChart =null;
+        equityPoolChart =null;
         super.onDestroy();
     }
 
     public static void refresh(){
-        if (equitystrategyChart != null || equitypoolChart != null) {
-            if (equitystrategylist == null || equitypoollist == null || equityintervallist == null) {
+        if (equityStrategyChart != null || equityPoolChart != null) {
+            if (equityStrategyList == null || equityPoolList == null || intervalList == null) {
                 return;
             }
 
-            if (equitystrategylist.isEmpty() || equitypoollist.isEmpty() ||equityintervallist.isEmpty() ) {
+            if (equityStrategyList.isEmpty() || equityPoolList.isEmpty() ||intervalList.isEmpty() ) {
                 return;
             }
 
             if (timeIni.equals("") && equityTimeIniTextView!=null){
-                long timelong = new Double(new Double(equityintervallist.get(0)) * 1000).longValue();
+                long timelong = Double.valueOf(Double.valueOf(intervalList.get(0)) * 1000).longValue();
                 equityTimeIniTextView.setText(Utils.timeToString(timelong));
             }
 
             if (equityTimeEndTextView!=null){
-                long timelong = new Double(new Double(equityintervallist.get(equityintervallist.size()-1)) * 1000).longValue();
+                long timelong = Double.valueOf(Double.valueOf(intervalList.get(intervalList.size()-1)) * 1000).longValue();
                 equityTimeEndTextView.setText(Utils.timeToString(timelong));
             }
         }
 
-        if (equitystrategyChart !=null) {
-            ArrayList<Entry> valsComp1 = new ArrayList<Entry>();
-            for (int i = 0; i < equitystrategylist.size(); i++) {
-                Entry entry = new Entry( equitystrategylist.get(i).floatValue(), i);
+        if (equityStrategyChart !=null) {
+            ArrayList<Entry> valsComp1 = new ArrayList<>();
+            for (int i = 0; i < equityStrategyList.size(); i++) {
+                Entry entry = new Entry(equityStrategyList.get(i).floatValue(), i);
                 valsComp1.add(entry);
             }
 
-            LineDataSet setComp1 = new LineDataSet(valsComp1, "Strategy Equity");
+            LineDataSet setComp1 = new LineDataSet(valsComp1, MainActivity.context.getString(R.string.strategy_equity));
             setComp1.setAxisDependency(YAxis.AxisDependency.LEFT);
             setComp1.setCircleColor(Color.BLUE);
             setComp1.setColor(Color.BLUE);
 
-            ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
+            ArrayList<LineDataSet> dataSets = new ArrayList<>();
             dataSets.add(setComp1);
 
-            ArrayList<String> xVals = new ArrayList<String>();
-            for (int i = 0; i < equityintervallist.size(); i++) {
-                xVals.add(equityintervallist.get(i));
+            ArrayList<String> xVals = new ArrayList<>();
+            for (String interval : intervalList) {
+                xVals.add(interval);
             }
 
-            YAxis axis = equitystrategyChart.getAxisLeft();
+            YAxis axis = equityStrategyChart.getAxisLeft();
             axis.setStartAtZero(false);
             axis.setValueFormatter(myValueFormatter);
 
-            equitystrategyChart.getAxisRight().setEnabled(false);
-            equitystrategyChart.getXAxis().setEnabled(false);
+            equityStrategyChart.getAxisRight().setEnabled(false);
+            equityStrategyChart.getXAxis().setEnabled(false);
 
             LineData data = new LineData(xVals, dataSets);
             data.setDrawValues(false);
-            equitystrategyChart.setData(data);
-            equitystrategyChart.invalidate();
-            equitystrategyChart.setDescription("Strategy Equity");
+            equityStrategyChart.setData(data);
+            equityStrategyChart.invalidate();
+            equityStrategyChart.setDescription(MainActivity.context.getString(R.string.strategy_equity));
         }
 
-        if (equitypoolChart !=null) {
-            ArrayList<Entry> valsComp1 = new ArrayList<Entry>();
-            for (int i = 0; i < equitypoollist.size(); i++) {
-                Entry entry = new Entry( equitypoollist.get(i).floatValue(), i);
+        if (equityPoolChart !=null) {
+            ArrayList<Entry> valsComp1 = new ArrayList<>();
+            for (int i = 0; i < equityPoolList.size(); i++) {
+                Entry entry = new Entry(equityPoolList.get(i).floatValue(), i);
                 valsComp1.add(entry);
             }
 
-            LineDataSet setComp1 = new LineDataSet(valsComp1, "Pool Equity");
+            LineDataSet setComp1 = new LineDataSet(valsComp1, MainActivity.context.getString(R.string.pool_equity));
             setComp1.setAxisDependency(YAxis.AxisDependency.LEFT);
             setComp1.setCircleColor(Color.BLUE);
             setComp1.setColor(Color.BLUE);
 
-            ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
+            ArrayList<LineDataSet> dataSets = new ArrayList<>();
             dataSets.add(setComp1);
 
-            ArrayList<String> xVals = new ArrayList<String>();
-            for (int i = 0; i < equityintervallist.size(); i++) {
-                xVals.add(equityintervallist.get(i));
+            ArrayList<String> xVals = new ArrayList<>();
+            for (String interval : intervalList) {
+                xVals.add(interval);
             }
 
-            YAxis axis = equitypoolChart.getAxisLeft();
+            YAxis axis = equityPoolChart.getAxisLeft();
             axis.setStartAtZero(false);
             axis.setValueFormatter(myValueFormatter);
 
-            equitypoolChart.getAxisRight().setEnabled(false);
-            equitypoolChart.getXAxis().setEnabled(false);
+            equityPoolChart.getAxisRight().setEnabled(false);
+            equityPoolChart.getXAxis().setEnabled(false);
 
             LineData data = new LineData(xVals, dataSets);
             data.setDrawValues(false);
-            equitypoolChart.setData(data);
-            equitypoolChart.invalidate();
-            equitypoolChart.setDescription("Pool Equity");
+            equityPoolChart.setData(data);
+            equityPoolChart.invalidate();
+            equityPoolChart.setDescription(MainActivity.context.getString(R.string.pool_equity));
         }
     }
 

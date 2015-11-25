@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.util.SparseBooleanArray;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -15,16 +14,10 @@ import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.Spinner;
 
-import java.util.ArrayList;
 import java.util.List;
 
-
-/**
- * Created by Jaime on 22/09/2015.
- */
 public class SettingsPop extends Activity {
 
-    static ArrayList<CheckBox> checkboxlist;
     static CheckBoxAdapter secsSelectedAdapter;
     static Spinner domainSpinner;
     static EditText userEditText;
@@ -46,7 +39,7 @@ public class SettingsPop extends Activity {
         getWindow().setLayout((int) (width * 1), (int) (height * 1));
         */
 
-        ArrayAdapter<String> domainAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.domainlist);
+        ArrayAdapter<String> domainAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.domainList);
         domainSpinner = (Spinner) this.findViewById(R.id.domainSpinner);
         domainSpinner.setAdapter(domainAdapter);
         int spinnerPosition = domainAdapter.getPosition(MainActivity.domain);
@@ -60,7 +53,7 @@ public class SettingsPop extends Activity {
         passwordEditText = (EditText) this.findViewById(R.id.passwordEditText);
         passwordEditText.setText(MainActivity.password);
 
-        ArrayAdapter<Integer> intervalAdapter = new ArrayAdapter<Integer>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.intervallist);
+        ArrayAdapter<Integer> intervalAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, MainActivity.intervalList);
         intervalSpinner = (Spinner) this.findViewById(R.id.intervalSpinner);
         intervalSpinner.setAdapter(intervalAdapter);
         int intervalPosition = intervalAdapter.getPosition(MainActivity.interval);
@@ -68,26 +61,13 @@ public class SettingsPop extends Activity {
             intervalSpinner.setSelection(intervalPosition);
         }
 
-
         secsSelectedGridView = (GridView) this.findViewById(R.id.secsSelectedGridView);
         secsSelectedGridView.setNumColumns(3);
         secsSelectedAdapter = new CheckBoxAdapter(this, R.layout.my_checkbox_format, MainActivity.secsAll, MainActivity.secsSelected);
         secsSelectedAdapter.notifyDataSetChanged();
         secsSelectedGridView.setAdapter(secsSelectedAdapter);
-        /*
-        secsSelectedGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                                                        @Override
-                                                        public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
-                                                            secsSelectedAdapter.toggle(position);
-                                                        }
-                                                    });
-                                                    */
 
         Button settingsCancelButton = (Button) this.findViewById(R.id.settingsCancelButton);
-        settingsCancelButton.setText("CANCEL");
-        Button settingsOKButton = (Button) this.findViewById(R.id.settingsOKButton);
-        settingsOKButton.setText("MODIFY");
-
         settingsCancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -95,6 +75,7 @@ public class SettingsPop extends Activity {
             }
         });
 
+        Button settingsOKButton = (Button) this.findViewById(R.id.settingsOKButton);
         settingsOKButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -114,12 +95,7 @@ public class SettingsPop extends Activity {
         for (int i=0; i<res.size(); i++){
             MainActivity.secsSelected.set(i,res.get(i));
         }
-        if (MainActivity.domain.equals(MainActivity.domainlist[0])){
-            MainActivity.ssl = true;
-        }
-        else{
-            MainActivity.ssl = false;
-        }
+        MainActivity.ssl = MainActivity.domain.equals(MainActivity.domainList[0]);
         MainActivity.refreshSettings();
     }
 
@@ -143,21 +119,6 @@ public class SettingsPop extends Activity {
             view.setOnCheckedChangeListener(this);
             return view;
         }
-
-        /*
-        public boolean isChecked(int position) {
-            return mCheckStates.get(position, false);
-        }
-
-        public void setChecked(int position, boolean isChecked) {
-            mCheckStates.put(position, isChecked);
-            notifyDataSetChanged();
-        }
-
-        public void toggle(int position) {
-            setChecked(position, !isChecked(position));
-        }
-        */
 
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             mCheckStates.put((Integer) buttonView.getTag(), isChecked);
