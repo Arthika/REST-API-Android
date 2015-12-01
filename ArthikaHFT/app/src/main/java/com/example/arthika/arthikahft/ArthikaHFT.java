@@ -72,6 +72,7 @@ public class ArthikaHFT {
     private SSLContext sslContext = null;
 
     private HashMap<ThreadExecution,myResponseHandler> threadmap;
+    static final Object wrapperLock = new Object();
 
     public static final String SIDE_BUY = "buy";
     public static final String SIDE_SELL = "sell";
@@ -793,8 +794,8 @@ public class ArthikaHFT {
             httpRequest.setEntity(request);
             client.execute(httpRequest, responseHandler);
         } finally {
-            synchronized (this) {
-                this.notify();
+            synchronized (wrapperLock) {
+                wrapperLock.notify();
             }
             client.close();
         }

@@ -93,9 +93,11 @@ public class EquityPop extends Activity {
 
         if (equityStrategyChart !=null) {
             ArrayList<Entry> valsComp1 = new ArrayList<>();
-            for (int i = 0; i < equityStrategyList.size(); i++) {
-                Entry entry = new Entry(equityStrategyList.get(i).floatValue(), i);
-                valsComp1.add(entry);
+            synchronized(equityStrategyList) {
+                for (int i = 0; i < equityStrategyList.size(); i++) {
+                    Entry entry = new Entry(equityStrategyList.get(i).floatValue(), i);
+                    valsComp1.add(entry);
+                }
             }
 
             LineDataSet setComp1 = new LineDataSet(valsComp1, MainActivity.context.getString(R.string.strategy_equity));
@@ -107,8 +109,10 @@ public class EquityPop extends Activity {
             dataSets.add(setComp1);
 
             ArrayList<String> xVals = new ArrayList<>();
-            for (String interval : intervalList) {
-                xVals.add(interval);
+            synchronized(intervalList) {
+                for (String interval : intervalList) {
+                    xVals.add(interval);
+                }
             }
 
             YAxis axis = equityStrategyChart.getAxisLeft();
@@ -127,9 +131,11 @@ public class EquityPop extends Activity {
 
         if (equityPoolChart !=null) {
             ArrayList<Entry> valsComp1 = new ArrayList<>();
-            for (int i = 0; i < equityPoolList.size(); i++) {
-                Entry entry = new Entry(equityPoolList.get(i).floatValue(), i);
-                valsComp1.add(entry);
+            synchronized(equityPoolList) {
+                for (int i = 0; i < equityPoolList.size(); i++) {
+                    Entry entry = new Entry(equityPoolList.get(i).floatValue(), i);
+                    valsComp1.add(entry);
+                }
             }
 
             LineDataSet setComp1 = new LineDataSet(valsComp1, MainActivity.context.getString(R.string.pool_equity));
@@ -141,8 +147,10 @@ public class EquityPop extends Activity {
             dataSets.add(setComp1);
 
             ArrayList<String> xVals = new ArrayList<>();
-            for (String interval : intervalList) {
-                xVals.add(interval);
+            synchronized(intervalList) {
+                for (String interval : intervalList) {
+                    xVals.add(interval);
+                }
             }
 
             YAxis axis = equityPoolChart.getAxisLeft();

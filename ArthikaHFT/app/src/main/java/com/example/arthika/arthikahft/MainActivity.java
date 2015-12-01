@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
     static final List<AssetItem> assetItemList = new ArrayList<>();
     static final List<String> positionShowArray = new ArrayList<>();
     static final List<String> assetShowArray = new ArrayList<>();
+    static List<ClosePositionItem> closePositionItemList = new ArrayList<>();
     static boolean pendingOrderChanged;
     static boolean closedOrderChanged;
     static boolean accountingChanged;
@@ -104,8 +105,6 @@ public class MainActivity extends AppCompatActivity {
     static String tiClosedOrderSelected;
     static String m2mcurrency;
 
-    static List<ClosePositionItem> closePositionItemList = new ArrayList<>();
-
     public static final String AGREGATED = "<AGGREGATED>";
     public static final String ALL = "ALL";
     public static final int DEFAULT_PAD = 16;
@@ -117,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int ASSET_COLUMNS = 4;
     public static final int MAX_PENDING_ORDERS = 50;
     public static final int MAX_CLOSED_ORDERS = 50;
+    public static final int MAX_MESSAGE_ORDERS = 8;
     private static final int REFRESH_TIME = 100;
 
     @Override
@@ -333,10 +333,10 @@ public class MainActivity extends AppCompatActivity {
     public static void refreshSettings(){
         if (started) {
             started = false;
-            synchronized(wrapper) {
+            synchronized(ArthikaHFT.wrapperLock) {
                 try {
                     closeStreaming();
-                    wrapper.wait();
+                    ArthikaHFT.wrapperLock.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -589,14 +589,14 @@ public class MainActivity extends AppCompatActivity {
 
     private static void closeStreamingConnect() {
         try {
-            synchronized(wrapper) {
+            synchronized(ArthikaHFT.wrapperLock) {
                 System.out.println("Finishing :" + priceStreamingId);
                 wrapper.getPriceEnd(priceStreamingId);
                 System.out.println("Finishing :" + orderStreamingId);
                 wrapper.getOrderEnd(orderStreamingId);
                 System.out.println("Finishing :" + positionStreamingId);
                 wrapper.getPositionEnd(positionStreamingId);
-                wrapper.notify();
+                ArthikaHFT.wrapperLock.notify();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -614,10 +614,12 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
 
                     if (PricesFragment.pricesGridView!=null) {
-                        // update Time
-                        if (updateTime != null && !updateTime.equals("")) {
-                            long timelong = Double.valueOf(Double.valueOf(updateTime) * 1000).longValue();
-                            PricesFragment.updateTimeTextView.setText(Utils.dateToString(timelong));
+                        if (started) {
+                            // update Time
+                            if (updateTime != null && !updateTime.equals("")) {
+                                long timelong = Double.valueOf(Double.valueOf(updateTime) * 1000).longValue();
+                                PricesFragment.updateTimeTextView.setText(Utils.dateToString(timelong));
+                            }
                         }
                         // update prices table
                         AdapterPrices priceAdapter = (AdapterPrices) PricesFragment.pricesGridView.getAdapter();
@@ -878,9 +880,9 @@ public class MainActivity extends AppCompatActivity {
                     updateTimeTextView.setText(R.string.getting_prices);
                     clearData();
                     try {
-                        synchronized (wrapper) {
+                        synchronized (ArthikaHFT.wrapperLock) {
                             doAuthentication();
-                            wrapper.wait();
+                            ArthikaHFT.wrapperLock.wait();
                         }
                         getAccount();
                         getInterface();
@@ -913,12 +915,15 @@ public class MainActivity extends AppCompatActivity {
                     started = false;
                     startButton.setEnabled(true);
                     stopButton.setEnabled(false);
-                    updateTimeTextView.setText(R.string.streaming_stopped);
-                    try {
-                        closeStreaming();
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
+                    synchronized(ArthikaHFT.wrapperLock) {
+                        try {
+                            closeStreaming();
+                            ArthikaHFT.wrapperLock.wait();
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
                     }
+                    updateTimeTextView.setText(R.string.streaming_stopped);
                 }
             });
 
@@ -1342,8 +1347,13 @@ public class MainActivity extends AppCompatActivity {
                             }
                             if (closePositionItemList.size() > 0) {
                                 String alertMessage = context.getString(R.string.close_positions_message) + " " + security + "?:";
+                                int n = 0;
                                 for (ClosePositionItem closePositionItem : closePositionItemList) {
                                     alertMessage += "\n" + closePositionItem.getSide().toUpperCase() + " " + Utils.doubleToString(closePositionItem.getQuantity()) + " " + closePositionItem.getSecurity() + " " + context.getString(R.string.in) + " " + closePositionItem.getAccount();
+                                    if (n++ > MAX_MESSAGE_ORDERS) {
+                                        alertMessage += "\n...";
+                                        break;
+                                    }
                                 }
                                 alertClosePosition.setMessage(alertMessage);
                                 alertClosePosition.show();
@@ -1383,8 +1393,13 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (closePositionItemList.size() > 0) {
                             String alertMessage = context.getString(R.string.close_all_positions_message);
+                            int n = 0;
                             for (ClosePositionItem closePositionItem : closePositionItemList) {
                                 alertMessage += "\n" + closePositionItem.getSide().toUpperCase() + " " + Utils.doubleToString(closePositionItem.getQuantity()) + " " + closePositionItem.getSecurity() + " " + context.getString(R.string.in) + " " + closePositionItem.getAccount();
+                                if (n++ > MAX_MESSAGE_ORDERS) {
+                                    alertMessage += "\n...";
+                                    break;
+                                }
                             }
                             alertClosePosition.setMessage(alertMessage);
                             alertClosePosition.show();

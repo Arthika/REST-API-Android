@@ -22,7 +22,7 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
     }
 
     @Override
-    public void priceEvent(List<ArthikaHFT.priceTick> priceTickList) {
+    public void priceEvent(List<ArthikaHFT.priceTick > priceTickList) {
         String[] prices = new String[MainActivity.PRICE_COLUMNS * (MainActivity.secs.size() + 1)];
         Double[] pricesArray = new Double[MainActivity.PRICE_COLUMNS * (MainActivity.secs.size() + 1)];
         for (int i=0; i<MainActivity.secs.size(); i++){
@@ -80,19 +80,20 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
                 EquityPop.intervalList.add(MainActivity.updateTime);
                 EquityPop.equityStrategyList.add(accountingTick.strategyPL);
                 EquityPop.equityPoolList.add(accountingTick.totalequity);
-                if (EquityPop.intervalList.size()> EquityPop.EQUITY_MAX_VALUES){
+                if (EquityPop.intervalList.size() > EquityPop.EQUITY_MAX_VALUES){
+                    int clearValues = EquityPop.intervalList.size() - EquityPop.EQUITY_MAX_VALUES;
                     synchronized(EquityPop.equityStrategyList){
-                        for (int i=0; i<10; i++){
+                        for (int i=0; i<clearValues; i++){
                             EquityPop.equityStrategyList.remove(0);
                         }
                     }
                     synchronized(EquityPop.equityPoolList){
-                        for (int i=0; i<10; i++){
+                        for (int i=0; i<clearValues; i++){
                             EquityPop.equityPoolList.remove(0);
                         }
                     }
                     synchronized(EquityPop.intervalList){
-                        for (int i=0; i<10; i++){
+                        for (int i=0; i<clearValues; i++){
                             EquityPop.intervalList.remove(0);
                         }
                         EquityPop.timeIni="";

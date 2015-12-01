@@ -28,8 +28,7 @@ public class PricePop extends Activity {
     private static TextView priceTimeIniTextView;
     private static TextView priceTimeEndTextView;
 
-    private static final int MAX_VALUES = 80;
-
+    private static final int PRICE_MAX_VALUES = 80;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,32 +93,40 @@ public class PricePop extends Activity {
                 priceTimeEndTextView.setText(Utils.timeToString(timelong));
             }
 
-            if (intervalList.size()>MAX_VALUES){
-                synchronized(intervalList){
-                    for (int i=0; i<10; i++){
+            if (intervalList.size() > PRICE_MAX_VALUES){
+                int clearValues = intervalList.size() - PRICE_MAX_VALUES;
+                synchronized(askList) {
+                    for (int i = 0; i < clearValues; i++) {
                         askList.remove(0);
+                    }
+                }
+                synchronized(bidList) {
+                    for (int i = 0; i < clearValues; i++) {
+                        bidList.remove(0);
+                    }
+                }
+                synchronized(intervalList) {
+                    for (int i = 0; i < clearValues; i++) {
+                        intervalList.remove(0);
                     }
                     long timelong = Double.valueOf(Double.valueOf(intervalList.get(0)) * 1000).longValue();
                     priceTimeIniTextView.setText(Utils.timeToString(timelong));
-                    for (int i=0; i<10; i++){
-                        bidList.remove(0);
-                    }
-
-                    for (int i=0; i<10; i++){
-                        intervalList.remove(0);
-                    }
                 }
             }
 
             ArrayList<Entry> valsComp1 = new ArrayList<>();
             ArrayList<Entry> valsComp2 = new ArrayList<>();
-            for (int i = 0; i < askList.size(); i++) {
-                Entry entry = new Entry(askList.get(i).floatValue(), i);
-                valsComp1.add(entry);
+            synchronized(askList) {
+                for (int i = 0; i < askList.size(); i++) {
+                    Entry entry = new Entry(askList.get(i).floatValue(), i);
+                    valsComp1.add(entry);
+                }
             }
-            for (int i = 0; i < bidList.size(); i++) {
-                Entry entry = new Entry(bidList.get(i).floatValue(), i);
-                valsComp2.add(entry);
+            synchronized(bidList) {
+                for (int i = 0; i < bidList.size(); i++) {
+                    Entry entry = new Entry(bidList.get(i).floatValue(), i);
+                    valsComp2.add(entry);
+                }
             }
 
             LineDataSet setComp1 = new LineDataSet(valsComp1, ArthikaHFT.SIDE_ASK.toUpperCase());
@@ -136,8 +143,10 @@ public class PricePop extends Activity {
             dataSets.add(setComp2);
 
             ArrayList<String> xVals = new ArrayList<>();
-            for (String interval : intervalList) {
-                xVals.add(interval);
+            synchronized(intervalList) {
+                for (String interval : intervalList) {
+                    xVals.add(interval);
+                }
             }
 
             YAxis axis = priceChart.getAxisLeft();
