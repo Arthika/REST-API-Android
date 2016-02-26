@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
         ssl=true;
         updateTime = "";
 
-        secsAll = new String[]{"EUR_USD", "EUR_GBP", "GBP_USD", "USD_JPY", "EUR_JPY", "GBP_JPY", "AUD_USD", "USD_CAD"};
+        secsAll = new String[]{"EUR/USD", "EUR/GBP", "GBP/USD", "USD/JPY", "EUR/JPY", "GBP/JPY", "AUD/USD", "USD/CAD"};
         secs = new ArrayList<>();
         secsSelected = new ArrayList<>();
         for (String ignored : secsAll) {
@@ -1105,9 +1105,9 @@ public class MainActivity extends AppCompatActivity {
                                 alertCancelOrder.show();
                             }
                             if ((cellOrderSelected % PENDINGORDER_COLUMNS) == (PENDINGORDER_COLUMNS - 1)) {
-                                System.out.println("info " + pendingOrderShowArray.get(cellOrderSelected - 7));
+                                System.out.println("info " + pendingOrderShowArray.get(cellOrderSelected - 8));
                                 startActivity(new Intent(v.getContext(), OrderInfoPop.class));
-                                OrderInfoPop.orderInfoOrderIdSelected = pendingOrderShowArray.get(cellOrderSelected - 7);
+                                OrderInfoPop.orderInfoOrderIdSelected = pendingOrderShowArray.get(cellOrderSelected - 8);
                             }
                         } catch (Exception ex) {
                             ex.printStackTrace();

@@ -53,17 +53,25 @@ class ArthikaHFTPriceListenerImp implements ArthikaHFTPriceListener {
             }
         }
         for (int i = 0; i < MainActivity.secs.size(); i++) {
-            MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1] = prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1];
-            MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2] = prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2];
+            try {
+                if (Utils.stringToDouble(prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1])>0 && Utils.stringToDouble(prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2])>0) {
+                    MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1] = prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1];
+                    MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2] = prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2];
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
         }
         if (PricePop.securitySelected!=null && PricePop.askList!=null && PricePop.bidList!=null){
             for (int i=0; i<MainActivity.secs.size(); i++){
                 if (MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS].equals(PricePop.securitySelected)){
                     synchronized(PricePop.intervalList) {
                         try {
-                            PricePop.intervalList.add(MainActivity.updateTime);
-                            PricePop.askList.add(Utils.stringToDouble(MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1]));
-                            PricePop.bidList.add(Utils.stringToDouble(MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2]));
+                            if (Utils.stringToDouble(MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1])>0 && Utils.stringToDouble(MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2])>0) {
+                                PricePop.intervalList.add(MainActivity.updateTime);
+                                PricePop.askList.add(Utils.stringToDouble(MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 1]));
+                                PricePop.bidList.add(Utils.stringToDouble(MainActivity.prices[(i + 1) * MainActivity.PRICE_COLUMNS + 2]));
+                            }
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
